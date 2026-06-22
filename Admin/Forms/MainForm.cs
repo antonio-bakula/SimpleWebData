@@ -150,7 +150,14 @@ namespace SimpleWebDataAdmin.Forms
 			flowTop.Controls.Add(btnAddSite);
 			flowTop.Controls.Add(btnDelSite);
 
-			var grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var grid = new DataGridView { 
+				Dock = DockStyle.Fill, 
+				ReadOnly = false, 
+				SelectionMode = DataGridViewSelectionMode.FullRowSelect, 
+				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, 
+				AllowUserToAddRows = false, 
+				BackgroundColor = Color.WhiteSmoke 
+			};
 			HideTechnicalColumns(grid);
 
 			btnLoad.Click += async (s, e) =>
@@ -161,7 +168,8 @@ namespace SimpleWebDataAdmin.Forms
 
 			grid.CellEndEdit += async (s, e) =>
 			{
-				var w = (WebSite)grid.Rows[e.RowIndex].DataBoundItem;
+				var w = grid.Rows[e.RowIndex].DataBoundItem as WebSite;
+				if (w == null) return;
 				await AppState.Api.PutAsync($"/api/superadmin/websites/{w.Id}", w);
 			};
 
@@ -190,7 +198,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabrani Web Site?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var w = (WebSite)grid.SelectedRows[0].DataBoundItem;
+					var w = grid.SelectedRows[0].DataBoundItem as WebSite;
+					if (w == null) return;
 					await AppState.Api.DeleteAsync($"/api/superadmin/websites/{w.Id}");
 					btnLoad.PerformClick();
 				}
@@ -241,7 +250,8 @@ namespace SimpleWebDataAdmin.Forms
 
 			grid.CellEndEdit += async (s, e) =>
 			{
-				var u = (User)grid.Rows[e.RowIndex].DataBoundItem;
+				var u = grid.Rows[e.RowIndex].DataBoundItem as User;
+				if (u == null) return;
 				await AppState.Api.PutAsync($"/api/superadmin/users/{u.Id}", u);
 			};
 
@@ -295,7 +305,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabranog korisnika?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var u = (User)grid.SelectedRows[0].DataBoundItem;
+					var u = grid.SelectedRows[0].DataBoundItem as User;
+					if (u == null) return;
 					await AppState.Api.DeleteAsync($"/api/superadmin/users/{u.Id}");
 					btnLoad.PerformClick();
 				}
@@ -315,15 +326,19 @@ namespace SimpleWebDataAdmin.Forms
 			grid.DataBindingComplete += (s, e) =>
 			{
 				if (grid.Columns["Id"] != null)
-					grid.Columns["Id"].Visible = false;
+					grid.Columns["Id"]!.Visible = false;
+
 				if (grid.Columns["WebSiteId"] != null)
-					grid.Columns["WebSiteId"].Visible = false;
+					grid.Columns["WebSiteId"]!.Visible = false;
+				
 				if (grid.Columns["PhotoGalleryId"] != null)
-					grid.Columns["PhotoGalleryId"].Visible = false;
+					grid.Columns["PhotoGalleryId"]!.Visible = false;
+				
 				if (grid.Columns["PageId"] != null)
-					grid.Columns["PageId"].Visible = false;
+					grid.Columns["PageId"]!.Visible = false;
+				
 				if (grid.Columns["FacilityId"] != null)
-					grid.Columns["FacilityId"].Visible = false;
+					grid.Columns["FacilityId"]!.Visible = false;
 			};
 		}
 
@@ -391,7 +406,7 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridPages.SelectedRows.Count > 0 && gridPages.DataSource != null)
 				{
-					var p = (Page)gridPages.SelectedRows[0].DataBoundItem;
+					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 					if (p != null)
 					{
 						var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{p.Id}/texts");
@@ -409,13 +424,15 @@ namespace SimpleWebDataAdmin.Forms
 			// IN-PLACE EDIT
 			gridPages.CellEndEdit += async (s, e) =>
 			{
-				var p = (Page)gridPages.Rows[e.RowIndex].DataBoundItem;
+				var p = gridPages.Rows[e.RowIndex].DataBoundItem as Page;
+				if (p == null) return;
 				await AppState.Api.PutAsync($"/api/admin/pages/{p.Id}", p);
 			};
 
 			gridTexts.CellEndEdit += async (s, e) =>
 			{
-				var t = (PageText)gridTexts.Rows[e.RowIndex].DataBoundItem;
+				var t = gridTexts.Rows[e.RowIndex].DataBoundItem as PageText;
+				if (t == null) return;
 				await AppState.Api.PutAsync($"/api/admin/pagetexts/{t.Id}", t);
 			};
 
@@ -424,7 +441,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridPages.SelectedRows.Count > 0 && MessageBox.Show("Obrisati stranicu?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var p = (Page)gridPages.SelectedRows[0].DataBoundItem;
+					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
+					if (p == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/pages/{p.Id}");
 					btnLoad.PerformClick();
 				}
@@ -456,10 +474,12 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridTexts.SelectedRows.Count > 0 && MessageBox.Show("Obrisati tekst?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var t = (PageText)gridTexts.SelectedRows[0].DataBoundItem;
+					var t = gridTexts.SelectedRows[0].DataBoundItem as PageText;
+					if (t == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/pagetexts/{t.Id}");
 
-					var p = (Page)gridPages.SelectedRows[0].DataBoundItem;
+					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
+					if (p == null) return;
 					var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{p.Id}/texts");
 					gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
 				}
@@ -467,7 +487,8 @@ namespace SimpleWebDataAdmin.Forms
 
 			btnAddText.Click += async (s, e) =>
 			{
-				var p = (Page)gridPages.SelectedRows[0].DataBoundItem;
+				var p = gridPages.SelectedRows[0].DataBoundItem as Page;
+				if (p == null) return;
 				using (var modal = new Form { ClientSize = new Size(400, 300), Text = "Novi Tekst", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
 				{
 					var lblCode = new Label { Text = "Šifra tekst bloka (Code) (Paziti da je unikatna):", Location = new Point(20, 15), AutoSize = true };
@@ -545,16 +566,16 @@ namespace SimpleWebDataAdmin.Forms
 			gridFac.DataBindingComplete += (s, e) =>
 			{
 				if (gridFac.Columns["PhotoGalleryId"] != null)
-					gridFac.Columns["PhotoGalleryId"].Visible = false;
+					gridFac.Columns["PhotoGalleryId"]!.Visible = false;
 				if (gridFac.Columns["Status"] != null)
-					gridFac.Columns["Status"].Visible = false;
+					gridFac.Columns["Status"]!.Visible = false;
 			};
 			gridRes.DataBindingComplete += (s, e) =>
 			{
 				if (gridRes.Columns["Status"] != null)
-					gridRes.Columns["Status"].Visible = false;
+					gridRes.Columns["Status"]!.Visible = false;
 				if (gridRes.Columns["FacilityId"] != null)
-					gridRes.Columns["FacilityId"].Visible = false;
+					gridRes.Columns["FacilityId"]!.Visible = false;
 			};
 
 			// LOADER
@@ -581,7 +602,7 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridFac.SelectedRows.Count > 0 && gridFac.DataSource != null)
 				{
-					var f = (Facility)gridFac.SelectedRows[0].DataBoundItem;
+					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 					if (f != null)
 					{
 						var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
@@ -596,7 +617,7 @@ namespace SimpleWebDataAdmin.Forms
 
 						// Onemogući edit na samom datumu, korisnik uređuje samo Status ili dodaje/briše datume
 						if (gridRes.Columns["Date"] != null)
-							gridRes.Columns["Date"].ReadOnly = true;
+							gridRes.Columns["Date"]!.ReadOnly = true;
 					}
 				}
 				else
@@ -609,13 +630,15 @@ namespace SimpleWebDataAdmin.Forms
 			// IZMJENE (In-place edit)
 			gridFac.CellEndEdit += async (s, e) =>
 			{
-				var f = (Facility)gridFac.Rows[e.RowIndex].DataBoundItem;
+				var f = gridFac.Rows[e.RowIndex].DataBoundItem as Facility;
+				if (f == null) return;
 				await AppState.Api.PutAsync($"/api/admin/facilities/{f.Id}", f);
 			};
 
 			gridRes.CellEndEdit += async (s, e) =>
 			{
-				var r = (Reservation)gridRes.Rows[e.RowIndex].DataBoundItem;
+				var r = gridRes.Rows[e.RowIndex].DataBoundItem as Reservation;
+				if (r == null) return;
 				await AppState.Api.PutAsync($"/api/admin/reservations/{r.Id}", r);
 			};
 
@@ -624,7 +647,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridFac.SelectedRows.Count > 0 && MessageBox.Show("Obrisati objekt?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var f = (Facility)gridFac.SelectedRows[0].DataBoundItem;
+					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
+					if (f == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/facilities/{f.Id}");
 					btnLoad.PerformClick();
 				}
@@ -655,11 +679,13 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridRes.SelectedRows.Count > 0 && MessageBox.Show("Obrisati zapis datuma?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					var r = (Reservation)gridRes.SelectedRows[0].DataBoundItem;
+					var r = gridRes.SelectedRows[0].DataBoundItem as Reservation;
+					if (r == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/reservations/{r.Id}");
 
 					// Osvježi grid rezervacija
-					var f = (Facility)gridFac.SelectedRows[0].DataBoundItem;
+					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
+					if (f == null) return;
 					var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
 					gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
 				}
@@ -667,7 +693,8 @@ namespace SimpleWebDataAdmin.Forms
 
 			btnAddDates.Click += async (s, e) =>
 			{
-				var f = (Facility)gridFac.SelectedRows[0].DataBoundItem;
+				var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
+				if (f == null) return;
 				using (var modal = new Form { ClientSize = new Size(250, 240), Text = "Dodaj Datume", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
 				{
 					var lblOd = new Label { Text = "Od datuma:", Location = new Point(20, 15), AutoSize = true };
@@ -786,8 +813,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridPhotos.SelectedRows.Count > 0 && gridGalleries.SelectedRows.Count > 0)
 				{
-					var p = (Photo)gridPhotos.SelectedRows[0].DataBoundItem;
-					var g = (PhotoGallery)gridGalleries.SelectedRows[0].DataBoundItem;
+					var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
+					var g = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
 					if (p != null && g != null)
 					{
 						var baseUrl = AppState.Api.BaseUrl.TrimEnd('/');
@@ -823,7 +850,7 @@ namespace SimpleWebDataAdmin.Forms
 				else
 				{
 					// Ako se uspješno napunilo i prva je odmah odabrana (što WinForms obično automatski napravi)
-					var gallery = (PhotoGallery)gridGalleries.SelectedRows[0].DataBoundItem;
+					var gallery = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
 					if (gallery != null && gallery.Photos != null)
 					{
 						gridPhotos.DataSource = new BindingList<Photo>(gallery.Photos);
@@ -839,7 +866,7 @@ namespace SimpleWebDataAdmin.Forms
 				// Promjena aktivne galerije treba pokazati slike:
 				if (gridGalleries.SelectedRows.Count > 0)
 				{
-					var gallery = (PhotoGallery)gridGalleries.SelectedRows[0].DataBoundItem;
+					var gallery = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
 					// Prekidamo ako je to "nova" row od strane Grida
 					if (gallery == null)
 						return;
@@ -865,7 +892,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridGalleries.SelectedRows.Count == 0)
 					return;
-				var g = (PhotoGallery)gridGalleries.SelectedRows[0].DataBoundItem;
+				var g = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
+				if (g == null) return;
 				if (MessageBox.Show("Obriši?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await AppState.Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
@@ -878,7 +906,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (e.RowIndex >= 0)
 				{
-					var g = (PhotoGallery)gridGalleries.Rows[e.RowIndex].DataBoundItem;
+					var g = gridGalleries.Rows[e.RowIndex].DataBoundItem as PhotoGallery;
+					if (g == null) return;
 					await AppState.Api.PutAsync($"/api/admin/photogalleries/{g.Id}", g);
 				}
 			};
@@ -888,7 +917,9 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridGalleries.SelectedRows.Count == 0)
 					return;
-				var galleryId = ((PhotoGallery)gridGalleries.SelectedRows[0].DataBoundItem).Id;
+				var gallery = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
+				if (gallery == null) return;
+				var galleryId = gallery.Id;
 
 				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
@@ -905,7 +936,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridPhotos.SelectedRows.Count == 0)
 					return;
-				var p = (Photo)gridPhotos.SelectedRows[0].DataBoundItem;
+				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
+				if (p == null) return;
 				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
@@ -920,7 +952,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (gridPhotos.SelectedRows.Count == 0)
 					return;
-				var p = (Photo)gridPhotos.SelectedRows[0].DataBoundItem;
+				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
+				if (p == null) return;
 				if (MessageBox.Show("Obriši sliku?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await AppState.Api.DeleteAsync($"/api/admin/photos/{p.Id}");
@@ -933,7 +966,8 @@ namespace SimpleWebDataAdmin.Forms
 			{
 				if (e.RowIndex >= 0)
 				{
-					var p = (Photo)gridPhotos.Rows[e.RowIndex].DataBoundItem;
+					var p = gridPhotos.Rows[e.RowIndex].DataBoundItem as Photo;
+					if (p == null) return;
 					// Zovemo UpdatePhotoAsync s null putanjom da azurira samo AltText!
 					await AppState.Api.UpdatePhotoAsync(p.Id, null, p.AltText);
 				}
