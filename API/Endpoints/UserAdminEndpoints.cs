@@ -84,7 +84,7 @@ namespace SimpleWebData.Endpoints
                 db.Photos.Add(photo);
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/admin/photos/{photo.Id}", new { photo.Id, photo.FileName, photo.AltText });
-            });
+            }).DisableAntiforgery();
 
             group.MapDelete("/photos/{id}", async (int id, AppDbContext db, ClaimsPrincipal user) =>
             {
@@ -116,7 +116,7 @@ namespace SimpleWebData.Endpoints
 
                 await db.SaveChangesAsync();
                 return Results.NoContent();
-            });
+            }).DisableAntiforgery();
 
             // --- Facilities & Reservations ---
             group.MapGet("/facilities", async (AppDbContext db, ClaimsPrincipal user) => {
