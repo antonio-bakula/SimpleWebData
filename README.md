@@ -9,14 +9,13 @@ The data administration is handled via a native Windows Forms desktop applicatio
 - **API**: A .NET Core Web API project. It provides the ReadOnly API for website consumption, and authenticated endpoints for the Admin application.
 - **Admin**: A .NET WinForms Windows desktop administration application. It allows website owners to manage their content and super users to manage websites and users.
 - **Client**: An HTML/JavaScript example demonstrating how to consume the ReadOnly API natively.
-- **SimpleWebData.postman_collection.json**: A Postman collection containing pre-configured requests for testing the API endpoints.
 
 ## Features
 
 - **Centralized Data Management**: Seamlessly manage multiple websites, pages, page text contents, photo galleries, and facilities with availability status.
 - **Role-Based Access**:
-  - *SuperUser*: Manages websites and users globally.
-  - *Admin (Website Owner)*: Manages content for their specific website and generates API keys.
+  - *SuperUser*: Manages websites and users globally, generate ReadOnly JWT token for Javascript access.
+  - *Admin (Website Owner)*: Manages content for their specific website.
   - *Read-Only API*: Publicly available endpoints to retrieve data for websites. Authenticated via a stateless ReadOnly JWT token restricted by requested origins.
 - **SQLite Database**: Lightweight, file-based, and easy to deploy database.
 
