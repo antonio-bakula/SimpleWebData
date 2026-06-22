@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo SimpleWebData</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px auto; 
+            max-width: 900px;
+            color: #333;
+        }
+        .header-content {
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #page-title { color: #2c3e50; }
+        #page-subtitle { color: #7f8c8d; font-weight: normal; }
+        
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .gallery img { 
+            max-width: 250px; 
+            height: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+
+        .facility-card { 
+            border: 1px solid #dfe6e9; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .status-available { color: #27ae60; font-weight: bold; }
+        .status-booked { color: #c0392b; font-weight: bold; }
+        .status-pending { color: #e67e22; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header-content">
+        <h1 id="page-title">Povezivanje na API...</h1>
+        <h3 id="page-subtitle"></h3>
+    </div>
+    
+    <h2>Istaknute fotografije iz stranice</h2>
+    <div id="gallery" class="gallery"></div>
+
+    <h2>Zauzetost / Rezervacije</h2>
+    <div id="reservations"></div>
+
+    <h2>Okolica (Direktno izvučena PhotoGallery)</h2>
+    <div id="standalone-gallery" class="gallery"></div>
+
+    <!-- Uključivanje Javascript skripti -->
+    <script src="SimpleWebDataClient.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Admin/SimpleWebDataAdmin.csproj" />
+  <Project Path="API\SimpleWebData.csproj" />
+</Solution>

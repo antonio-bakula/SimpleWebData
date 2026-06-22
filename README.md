@@ -9,6 +9,7 @@ The data administration is handled via a native Windows Forms desktop applicatio
 - **API**: A .NET Core Web API project. It provides the ReadOnly API for website consumption, and authenticated endpoints for the Admin application.
 - **Admin**: A .NET WinForms Windows desktop administration application. It allows website owners to manage their content and super users to manage websites and users.
 - **Client**: An HTML/JavaScript example demonstrating how to consume the ReadOnly API natively.
+- **SimpleWebData.postman_collection.json**: A Postman collection containing pre-configured requests for testing the API endpoints.
 
 ## Features
 
@@ -39,7 +40,7 @@ The administration interface is a native Windows Forms app located in the `Admin
 ### 3. JavaScript Client
 The `Client` directory contains an example of how to consume the REST API from standard HTML and vanilla JavaScript.
 
-For detailed instructions on using the JavaScript client, please refer to the [SimpleWebData Javascript client za ReadOnly API](./work.md#simplewebdata-javascript-client-za-readonly-api) documentation located in `work.md`.
+For detailed instructions on using the JavaScript client, please refer to the [SimpleWebData ReadOnly API Javascript client](./SimpleWebDataClient-en.md) documentation.
 
 #### Quick Start with the JS Client
 

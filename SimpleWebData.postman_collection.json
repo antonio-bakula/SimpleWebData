@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "SimpleWebData API",
+    "description": "Postman kolekcija za testiranje SimpleWebData aplikacije. Automatski hvata JWT tokene iz Login metoda i dodjeljuje ih na Collection levelu.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://localhost:5001", "type": "string" },
+    { "key": "superAdminToken", "value": "", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "apiKey", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as SuperAdmin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('superAdminToken', json.accessToken);",
+                  "    console.log('SuperAdmin Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": [ "{{baseUrl}}" ], "path": [ "api", "auth", "login" ] },
+            "body": { "mode": "raw", "raw": "{\r\n  \"username\": \"superadmin\",\r\n  \"password\": \"123\"\r\n}" }
+          }
+        },
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('adminToken', json.accessToken);",
+                  "    console.log('Admin Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": [ "{{baseUrl}}" ], "path": [ "api", "auth", "login" ] },
+            "body": { "mode": "raw", "raw": "{\r\n  \"username\": \"admin\",\r\n  \"password\": \"123\"\r\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. SuperAdmin (System)",
+      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{superAdminToken}}", "type": "string" } ] },
+      "item": [
+        { "name": "Get WebSites", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/superadmin/websites", "host": [ "{{baseUrl}}" ], "path": [ "api", "superadmin", "websites" ] } } },
+        { "name": "Get Users", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/superadmin/users", "host": [ "{{baseUrl}}" ], "path": [ "api", "superadmin", "users" ] } } }
+      ]
+    },
+    {
+      "name": "3. Admin (Tenant Context)",
+      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{adminToken}}", "type": "string" } ] },
+      "item": [
+        {
+          "name": "Generate API Key (Read-Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('apiKey', json.apiKey);",
+                  "    console.log('API Key saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/admin/apikey", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "apikey" ] }, "body": { "mode": "raw", "raw": "[\r\n  \"localhost\"\r\n]" } }
+        },
+        { "name": "Get PhotoGalleries", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/photogalleries", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "photogalleries" ] } } },
+        { "name": "Create PhotoGallery", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/admin/photogalleries", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "photogalleries" ] }, "body": { "mode": "raw", "raw": "{\r\n  \"code\": \"nova-galerija\",\r\n  \"name\": \"Nova Galerija\"\r\n}" } } },
+        { "name": "Upload Photo to Gallery", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/admin/photogalleries/1/photos", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "photogalleries", "1", "photos" ] }, "body": { "mode": "formdata", "formdata": [ { "key": "altText", "value": "Opis slike", "type": "text" }, { "key": "file", "type": "file", "src": "" } ] } } },
+        { "name": "Get Facilities", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/facilities", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "facilities" ] } } },
+        { "name": "Create Facility", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/admin/facilities", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "facilities" ] }, "body": { "mode": "raw", "raw": "{\r\n  \"code\": \"novi-ap\",\r\n  \"name\": \"Novi Apartman\"\r\n}" } } },
+        { "name": "Get Facility Reservations", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/facilities/1/reservations", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "facilities", "1", "reservations" ] } } },
+        { "name": "Get Pages", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/pages", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "pages" ] } } },
+        { "name": "Create Page", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/admin/pages", "host": [ "{{baseUrl}}" ], "path": [ "api", "admin", "pages" ] }, "body": { "mode": "raw", "raw": "{\r\n  \"code\": \"nova-stranica\"\r\n}" } } }
+      ]
+    },
+    {
+      "name": "4. Public / Read-Only",
+      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{apiKey}}", "type": "string" } ] },
+      "item": [
+        { "name": "Get Page Details", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/read/pages/home", "host": [ "{{baseUrl}}" ], "path": [ "api", "read", "pages", "home" ] } } },
+        { "name": "Get PhotoGallery Details", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/read/photogalleries/gal-apartman", "host": [ "{{baseUrl}}" ], "path": [ "api", "read", "photogalleries", "gal-apartman" ] } } },
+        { "name": "Get Facility Reservations (Public)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/read/facilities/ap1/reservations?from=2024-01-01&to=2026-12-31", "host": [ "{{baseUrl}}" ], "path": [ "api", "read", "facilities", "ap1", "reservations" ], "query": [ { "key": "from", "value": "2024-01-01" }, { "key": "to", "value": "2026-12-31" } ] } } },
+        { "name": "Get Image (No Auth Required)", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": { "raw": "{{baseUrl}}/api/read/images/gal-apartman/pic1.jpg", "host": [ "{{baseUrl}}" ], "path": [ "api", "read", "images", "gal-apartman", "pic1.jpg" ] } } }
+      ]
+    }
+  ]
+}
