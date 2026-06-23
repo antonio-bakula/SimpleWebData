@@ -206,6 +206,7 @@ namespace SimpleWebData.Endpoints
                 var pg = await db.Pages.FirstOrDefaultAsync(x => x.Id == id && x.WebSiteId == webSiteId);
                 if (pg == null) return Results.NotFound();
                 pg.Code = input.Code; pg.PhotoGalleryId = input.PhotoGalleryId;
+                pg.Title = input.Title; pg.Description = input.Description; pg.Keywords = input.Keywords;
                 await db.SaveChangesAsync(); return Results.Ok(pg);
             });
 

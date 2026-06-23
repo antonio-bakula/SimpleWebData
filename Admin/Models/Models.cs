@@ -67,6 +67,9 @@ namespace SimpleWebDataAdmin.Models
     {
         public int Id { get; set; }
         public string Code { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public string? Keywords { get; set; }
         public int WebSiteId { get; set; }
         public int? PhotoGalleryId { get; set; }
     }

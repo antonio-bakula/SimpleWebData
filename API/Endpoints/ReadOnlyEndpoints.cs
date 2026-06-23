@@ -79,6 +79,9 @@ namespace SimpleWebData.Endpoints
                 var dto = new PageDto
                 {
                     Code = page.Code,
+                    Title = page.Title,
+                    Description = page.Description,
+                    Keywords = page.Keywords,
                     Texts = page.Texts.Select(t => new PageTextDto { Code = t.Code, Content = t.Content }).ToList(),
                     PhotoGallery = page.PhotoGallery != null ? new PhotoGalleryDto
                     {

@@ -20,7 +20,9 @@ namespace SimpleWebDataAdmin.Views
 			BackColor = Color.White;
 
 			var split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical };
-			split.Resize += (s, e) => { split.SplitterDistance = split.Width / 3; };
+			// Stranice (lijevo) dobivaju ~2/3 jer imaju više stupaca (Code + SEO polja + galerija);
+			// tekstovi (desno) imaju samo Code i Content pa im je dovoljna 1/3.
+			split.Resize += (s, e) => { split.SplitterDistance = split.Width * 2 / 3; };
 
 			// --- LJEVI DIO: Stranice ---
 			var gLeft = new GroupBox { Text = "1. Stranice", Dock = DockStyle.Fill, Padding = new Padding(10) };
@@ -32,8 +34,15 @@ namespace SimpleWebDataAdmin.Views
 			flowLeft.Controls.Add(btnAddPage);
 			flowLeft.Controls.Add(btnDelPage);
 
+			// Eksplicitni stupci u traženom redoslijedu: prvo Code, zatim SEO polja, pa izbor galerije na kraju.
+			// (AutoGenerateColumns isključen da imamo punu kontrolu nad redoslijedom i širinama.)
 			var gridPages = MakeGrid();
-			HideTechnicalColumns(gridPages);
+			gridPages.AutoGenerateColumns = false;
+			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Code", HeaderText = "Code", DataPropertyName = "Code", FillWeight = 70 });
+			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = "SEO Title", DataPropertyName = "Title", FillWeight = 120 });
+			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Description", HeaderText = "SEO Description", DataPropertyName = "Description", FillWeight = 200 });
+			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Keywords", HeaderText = "SEO Keywords", DataPropertyName = "Keywords", FillWeight = 130 });
+			gridPages.Columns.Add(new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = "Galerija (Code)", DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", FillWeight = 90 });
 			gLeft.Controls.Add(gridPages);
 			gLeft.Controls.Add(flowLeft);
 
@@ -59,15 +68,8 @@ namespace SimpleWebDataAdmin.Views
 				var pages = await Api.GetAsync<List<Page>>("/api/admin/pages");
 				var gals = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
 
-				if (!gridPages.Columns.Contains("GalleryCombo"))
-				{
-					var combo = new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = "Galerija (Code)", DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", DataSource = gals };
-					gridPages.Columns.Add(combo);
-				}
-				else
-				{
-					(gridPages.Columns["GalleryCombo"] as DataGridViewComboBoxColumn)!.DataSource = gals;
-				}
+				// Combo stupac za galeriju definiran je u konstruktoru; ovdje samo osvježimo njegov izvor podataka.
+				((DataGridViewComboBoxColumn)gridPages.Columns["GalleryCombo"]!).DataSource = gals;
 
 				gridPages.DataSource = ToBindingList(pages);
 			}

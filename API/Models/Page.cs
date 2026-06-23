@@ -8,6 +8,11 @@ namespace SimpleWebData.Models
         public int Id { get; set; }
         public string Code { get; set; } = string.Empty;
 
+        // SEO meta podaci stranice (za <title> i <meta> tagove na javnom webu)
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public string? Keywords { get; set; }
+
         public int WebSiteId { get; set; }
         public WebSite WebSite { get; set; } = null!;
 

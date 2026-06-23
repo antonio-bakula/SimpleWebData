@@ -73,8 +73,23 @@ namespace SimpleWebData.Data
             );
 
             // 5. Stranice i tekstovi
-            var pageHome = new Page { Code = "home", WebSiteId = website.Id, PhotoGalleryId = gallery2.Id };
-            var pageContact = new Page { Code = "contact", WebSiteId = website.Id };
+            var pageHome = new Page
+            {
+                Code = "home",
+                Title = "Apartmani Sunce - privatni smještaj uz more",
+                Description = "Privatni apartmani i sobe uz more. Bezbrižan odmor za cijelu obitelj.",
+                Keywords = "apartmani, smještaj, more, odmor, sunce",
+                WebSiteId = website.Id,
+                PhotoGalleryId = gallery2.Id
+            };
+            var pageContact = new Page
+            {
+                Code = "contact",
+                Title = "Kontakt - Apartmani Sunce",
+                Description = "Kontaktirajte nas za rezervacije i upite.",
+                Keywords = "kontakt, rezervacija, adresa, telefon",
+                WebSiteId = website.Id
+            };
             context.Pages.AddRange(pageHome, pageContact);
             await context.SaveChangesAsync();
 
@@ -118,7 +133,15 @@ namespace SimpleWebData.Data
             context.Reservations.Add(
                 new Reservation { Date = DateTime.Today, Status = ReservationStatus.Available, FacilityId = fac2a.Id });
 
-            var page2Home = new Page { Code = "home", WebSiteId = website2.Id, PhotoGalleryId = gallery2a.Id };
+            var page2Home = new Page
+            {
+                Code = "home",
+                Title = "Kamp Jadran - kamping uz more",
+                Description = "Kamp parcele uz more, mir i priroda za savršen kamping odmor.",
+                Keywords = "kamp, kamping, parcele, more, priroda",
+                WebSiteId = website2.Id,
+                PhotoGalleryId = gallery2a.Id
+            };
             context.Pages.Add(page2Home);
             await context.SaveChangesAsync();
 
