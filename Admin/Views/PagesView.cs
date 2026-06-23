@@ -171,6 +171,8 @@ namespace SimpleWebDataAdmin.Views
 					modal.Controls.Add(btnOk);
 					modal.AcceptButton = btnOk;
 
+					UiZoom.ScaleForm(modal);
+
 					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
 					{
 						var t = new PageText { Code = txtCode.Text, Content = txtContent.Text };

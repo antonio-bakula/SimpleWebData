@@ -18,6 +18,13 @@ namespace SimpleWebDataAdmin.Forms
 			InitializeComponent();
 		}
 
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+			// Primijeni zapamćenu veličinu prikaza (zoom) - login je apsolutno pozicioniran pa skaliramo i raspored.
+			UiZoom.ScaleForm(this);
+		}
+
 		private void InitializeComponent()
 		{
 			this.Text = "Login - SimpleWebData Admin";

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using SimpleWebDataAdmin.Services;
 
 namespace SimpleWebDataAdmin.Views
 {
@@ -26,6 +27,8 @@ namespace SimpleWebDataAdmin.Views
 			modal.Controls.Add(txt);
 			modal.Controls.Add(btnOk);
 			modal.AcceptButton = btnOk;
+
+			UiZoom.ScaleForm(modal);
 
 			if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txt.Text))
 				return txt.Text;

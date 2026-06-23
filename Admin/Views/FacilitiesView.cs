@@ -200,6 +200,8 @@ namespace SimpleWebDataAdmin.Views
 					modal.Controls.Add(btnOk);
 					modal.AcceptButton = btnOk;
 
+					UiZoom.ScaleForm(modal);
+
 					if (modal.ShowDialog() == DialogResult.OK)
 					{
 						var start = dtpOd.Value.Date;

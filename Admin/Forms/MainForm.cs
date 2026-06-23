@@ -19,6 +19,7 @@ namespace SimpleWebDataAdmin.Forms
 		public int Width { get; set; }
 		public int Height { get; set; }
 		public FormWindowState WindowState { get; set; }
+		public double Zoom { get; set; } = 1.0;
 	}
 
 	public class MainForm : Form
@@ -32,6 +33,9 @@ namespace SimpleWebDataAdmin.Forms
 		// Traka s aktivnim web site-om: lblActiveSite (obični admin) ili cmbSite (super admin bira site).
 		private Label lblActiveSite = null!;
 		private ComboBox? cmbSite;
+
+		// Zoom (veličina prikaza) - logika je u UiZoom helperu.
+		private ComboBox? cmbZoom;
 
 		public MainForm(ApiClient api)
 		{
@@ -71,6 +75,10 @@ namespace SimpleWebDataAdmin.Forms
 						this.Location = new Point(s.X, s.Y);
 						this.Size = new Size(s.Width, s.Height);
 						this.WindowState = s.WindowState;
+
+						// Vrati zapamćenu veličinu prikaza (zoom).
+						if (s.Zoom >= 1.0 && s.Zoom <= 2.0)
+							SetZoomCombo(s.Zoom);
 					}
 				}
 			}
@@ -120,7 +128,7 @@ namespace SimpleWebDataAdmin.Forms
 			base.OnFormClosing(e);
 			try
 			{
-				var s = new WindowSettings { WindowState = this.WindowState };
+				var s = new WindowSettings { WindowState = this.WindowState, Zoom = UiZoom.Factor };
 				if (this.WindowState == FormWindowState.Normal)
 				{
 					s.X = this.Location.X;
@@ -217,8 +225,49 @@ namespace SimpleWebDataAdmin.Forms
 				pnlHeader.Controls.Add(lblActiveSite);
 			}
 
+			// Zoom kontrola (veličina prikaza) - vidljiva svima.
+			var lblZoom = new Label
+			{
+				Text = "Veličina prikaza:",
+				AutoSize = true,
+				Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+				Margin = new Padding(40, 6, 8, 0)
+			};
+			cmbZoom = new ComboBox
+			{
+				DropDownStyle = ComboBoxStyle.DropDownList,
+				Width = 90,
+				Font = new Font("Segoe UI", 10F),
+				Margin = new Padding(0, 3, 0, 0)
+			};
+			cmbZoom.Items.AddRange(new object[] { "100%", "125%", "150%", "175%", "200%" });
+			cmbZoom.SelectedIndex = 0;
+			cmbZoom.SelectedIndexChanged += (s, e) => OnZoomChanged();
+			pnlHeader.Controls.Add(lblZoom);
+			pnlHeader.Controls.Add(cmbZoom);
+
 			// Dodaje se nakon TabControl-a (Dock.Fill) pa zbog redoslijeda dockanja traka ide na vrh, a tabovi pune ostatak.
 			this.Controls.Add(pnlHeader);
+		}
+
+		// Glavni prozor skalira samo font (docking/flow raspored se sam preslože).
+		private void OnZoomChanged()
+		{
+			if (cmbZoom?.SelectedItem is string txt && int.TryParse(txt.TrimEnd('%'), out int pct))
+				UiZoom.ApplyFontZoom(this, pct / 100.0);
+		}
+
+		// Postavi combo na spremljeni zoom (okida OnZoomChanged preko handlera); ako nije preset, primijeni izravno.
+		private void SetZoomCombo(double zoom)
+		{
+			if (cmbZoom == null)
+				return;
+			var target = $"{(int)Math.Round(zoom * 100)}%";
+			int idx = cmbZoom.Items.IndexOf(target);
+			if (idx >= 0)
+				cmbZoom.SelectedIndex = idx;
+			else
+				UiZoom.ApplyFontZoom(this, zoom);
 		}
 
 		// Inicijalno učita web site kontekst: super adminu napuni selektor i postavi aktivni site,

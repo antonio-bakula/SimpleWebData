@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using SimpleWebDataAdmin.Services;
 
 namespace SimpleWebDataAdmin
 {
@@ -15,6 +16,9 @@ namespace SimpleWebDataAdmin
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += (s, e) =>
                 MessageBox.Show($"Došlo je do greške: {e.Exception.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            // Učitaj zapamćenu veličinu prikaza (zoom) da se primijeni već na login.
+            UiZoom.Load();
 
             using var loginForm = new Forms.LoginForm();
             if (loginForm.ShowDialog() == DialogResult.OK)
