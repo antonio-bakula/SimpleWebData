@@ -16,116 +16,116 @@ using System.Collections.Generic;
 
 namespace SimpleWebData.Models
 {
-    public class WebSite
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string? Description { get; set; }
+	public class WebSite
+	{
+		public int Id { get; set; }
+		public string Code { get; set; } = string.Empty;
+		public string? Description { get; set; }
 
-        public ICollection<User> Users { get; set; } = new List<User>();
-        public ICollection<PhotoGallery> PhotoGalleries { get; set; } = new List<PhotoGallery>();
-        public ICollection<Facility> Facilities { get; set; } = new List<Facility>();
-        public ICollection<Page> Pages { get; set; } = new List<Page>();
-        public ICollection<PageText> PageTexts { get; set; } = new List<PageText>();
-    }
+		public ICollection<User> Users { get; set; } = new List<User>();
+		public ICollection<PhotoGallery> PhotoGalleries { get; set; } = new List<PhotoGallery>();
+		public ICollection<Facility> Facilities { get; set; } = new List<Facility>();
+		public ICollection<Page> Pages { get; set; } = new List<Page>();
+		public ICollection<PageText> PageTexts { get; set; } = new List<PageText>();
+	}
 
-    public class User
-    {
-        public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Email { get; set; }
+	public class User
+	{
+		public int Id { get; set; }
+		public string Username { get; set; } = string.Empty;
+		public string Password { get; set; } = string.Empty;
+		public string? FirstName { get; set; }
+		public string? LastName { get; set; }
+		public string? Email { get; set; }
 				public bool IsSuperUser { get; set; }
 
-        public int WebSiteId { get; set; }
-        public WebSite WebSite { get; set; } = null!;
-    }
+		public int WebSiteId { get; set; }
+		public WebSite WebSite { get; set; } = null!;
+	}
 
-    public class PhotoGallery
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
+	public class PhotoGallery
+	{
+		public int Id { get; set; }
+		public string Code { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
+		public string? Description { get; set; }
 
-        public int WebSiteId { get; set; }
-        public WebSite WebSite { get; set; } = null!;
+		public int WebSiteId { get; set; }
+		public WebSite WebSite { get; set; } = null!;
 
-        public ICollection<Photo> Photos { get; set; } = new List<Photo>();
-    }
+		public ICollection<Photo> Photos { get; set; } = new List<Photo>();
+	}
 
-    public class Photo
-    {
-        public int Id { get; set; }
-        public byte[] ImageData { get; set; } = Array.Empty<byte>();
-        public string? AltText { get; set; }
-        public string FileName { get; set; } = string.Empty;
+	public class Photo
+	{
+		public int Id { get; set; }
+		public byte[] ImageData { get; set; } = Array.Empty<byte>();
+		public string? AltText { get; set; }
+		public string FileName { get; set; } = string.Empty;
 
-        public int PhotoGalleryId { get; set; }
-        public PhotoGallery PhotoGallery { get; set; } = null!;
-    }
+		public int PhotoGalleryId { get; set; }
+		public PhotoGallery PhotoGallery { get; set; } = null!;
+	}
 
-    public class Facility
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
+	public class Facility
+	{
+		public int Id { get; set; }
+		public string Code { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
+		public string? Description { get; set; }
 
-        public int WebSiteId { get; set; }
-        public WebSite WebSite { get; set; } = null!;
+		public int WebSiteId { get; set; }
+		public WebSite WebSite { get; set; } = null!;
 
-        public int? PhotoGalleryId { get; set; }
-        public PhotoGallery? PhotoGallery { get; set; }
+		public int? PhotoGalleryId { get; set; }
+		public PhotoGallery? PhotoGallery { get; set; }
 
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-    }
+		public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+	}
 
-    public enum ReservationStatus
-    {
-        Available,
-        Pending,
-        Booked
-    }
+	public enum ReservationStatus
+	{
+		Available,
+		Pending,
+		Booked
+	}
 
-    public class Reservation
-    {
-        public int Id { get; set; }
-        public DateTime Date { get; set; }
-        public ReservationStatus Status { get; set; } = ReservationStatus.Available;
+	public class Reservation
+	{
+		public int Id { get; set; }
+		public DateTime Date { get; set; }
+		public ReservationStatus Status { get; set; } = ReservationStatus.Available;
 
-        public int FacilityId { get; set; }
-        public Facility Facility { get; set; } = null!;
-    }
+		public int FacilityId { get; set; }
+		public Facility Facility { get; set; } = null!;
+	}
 
-    public class Page
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
+	public class Page
+	{
+		public int Id { get; set; }
+		public string Code { get; set; } = string.Empty;
 
-        public int WebSiteId { get; set; }
-        public WebSite WebSite { get; set; } = null!;
+		public int WebSiteId { get; set; }
+		public WebSite WebSite { get; set; } = null!;
 
-        public int? PhotoGalleryId { get; set; }
-        public PhotoGallery? PhotoGallery { get; set; }
+		public int? PhotoGalleryId { get; set; }
+		public PhotoGallery? PhotoGallery { get; set; }
 
-        public ICollection<PageText> Texts { get; set; } = new List<PageText>();
-    }
+		public ICollection<PageText> Texts { get; set; } = new List<PageText>();
+	}
 
-    public class PageText
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+	public class PageText
+	{
+		public int Id { get; set; }
+		public string Code { get; set; } = string.Empty;
+		public string Content { get; set; } = string.Empty;
 
-        public int WebSiteId { get; set; }
-        public WebSite WebSite { get; set; } = null!;
+		public int WebSiteId { get; set; }
+		public WebSite WebSite { get; set; } = null!;
 
-        public int PageId { get; set; }
-        public Page Page { get; set; } = null!;
-    }
+		public int PageId { get; set; }
+		public Page Page { get; set; } = null!;
+	}
 }
 ```
 
@@ -220,11 +220,11 @@ U direktoriju ./src napraviti ćeš .NET Core WEB API project sa Entity Framewor
 6. **Migracije i uvodni podaci (Seeding)**: 
    - Pokretanje inicijalne migracije kako bi se kreirala datoteka baze podataka.
    - Implementacija kratkog "Seedera" koji će pri pokretanju (ako je baza prazna) dodati:
-     - Jednog `SuperUser-a` (admina) za početak,
-     - Jedan probni `WebSite` i dodijeljenog regularnog vlasnika (User admina),
-     - 2 fotogalerije gdje bi svaka sadržavala po nekoliko slika,
-     - 2 objekta (`Facilities`) i njihove simulirane datume rezervacija,
-     - 2 stranice sa svojim redovima tesksta (npr. *Naslovnica* i *Kontakt*).
+	 - Jednog `SuperUser-a` (admina) za početak,
+	 - Jedan probni `WebSite` i dodijeljenog regularnog vlasnika (User admina),
+	 - 2 fotogalerije gdje bi svaka sadržavala po nekoliko slika,
+	 - 2 objekta (`Facilities`) i njihove simulirane datume rezervacija,
+	 - 2 stranice sa svojim redovima tesksta (npr. *Naslovnica* i *Kontakt*).
 
 7. **Definiranje DTO klasa (Data Transfer Objects)**: 
    - Strukturiranje objekata za response (npr. `PhotoGalleryDto`, `AuthResponse`) kako bi se sakrili nebitni podaci (poput password hasha) i spriječile EF Core greške kod cirkularnih referenci.
@@ -240,13 +240,13 @@ U direktoriju ./src napraviti ćeš .NET Core WEB API project sa Entity Framewor
    - Serviranje slike direktno iz njezina `ImageData` bloba na endpointu `/api/read/images/{galleryCode}/{fileName}`.
 
 10. **Implementacija UserAdmin API metoda**: 
-    - Osiguranje ruta podauth-om koji zahtijeva uobičajen JWT.
-    - Metoda za kreiranje ReadOnly API tokena za domenu klijenta.
-    - Implementacija CRUD manipulacija podacima uz izričito filtriranje: svaka akcija mora uzimati u obzir operaciju nad `WebSiteId == User.Claims.WebSiteId`.
+	- Osiguranje ruta podauth-om koji zahtijeva uobičajen JWT.
+	- Metoda za kreiranje ReadOnly API tokena za domenu klijenta.
+	- Implementacija CRUD manipulacija podacima uz izričito filtriranje: svaka akcija mora uzimati u obzir operaciju nad `WebSiteId == User.Claims.WebSiteId`.
 
 11. **Implementacija SuperUserAdmin API metoda**: 
-    - Zaključavanje ovih ruta role-based (claim-based) filterom za SuperUser-a.
-    - Dohvat i CRUD upravljanje `WebSite`-ovima i `User`-ima.
+	- Zaključavanje ovih ruta role-based (claim-based) filterom za SuperUser-a.
+	- Dohvat i CRUD upravljanje `WebSite`-ovima i `User`-ima.
 
 
 # Example html / javascript projekt

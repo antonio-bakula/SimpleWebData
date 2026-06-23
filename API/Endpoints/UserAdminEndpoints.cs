@@ -16,6 +16,18 @@ namespace SimpleWebData.Endpoints
             // Primjenjujemo Policy koji smo ranije definirali u Program.cs
             group.RequireAuthorization("UserAdminOnly");
 
+            // --- Trenutni Web Site ---
+            // Vraća web site na kojem korisnik trenutno radi. Za običnog admina to je njegov site iz tokena;
+            // za super admina je to site odabran preko X-WebSite-Id headera (vidi middleware u Program.cs).
+            group.MapGet("/current-website", async (AppDbContext db, ClaimsPrincipal user) =>
+            {
+                int webSiteId = int.Parse(user.Claims.First(c => c.Type == "WebSiteId").Value);
+                var site = await db.WebSites.FindAsync(webSiteId);
+                return site == null
+                    ? Results.NotFound()
+                    : Results.Ok(new { site.Id, site.Code, site.Name, site.Description });
+            });
+
             // --- API Keys ---
             // Generiranje trajnog read-only ključa smije samo super admin.
             // Endpoint je u "UserAdminOnly" grupi, ali ovdje dodatno tražimo "SuperUserOnly"

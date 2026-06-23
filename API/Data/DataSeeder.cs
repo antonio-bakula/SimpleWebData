@@ -25,6 +25,7 @@ namespace SimpleWebData.Data
             var website = new WebSite
             {
                 Code = "demo-site",
+                Name = "Apartmani Sunce",
                 Description = "Testni Demo WebSite"
             };
             context.WebSites.Add(website);
@@ -34,7 +35,7 @@ namespace SimpleWebData.Data
             var superAdmin = new User
             {
                 Username = "superadmin",
-                Password = "123", // NAPOMENA: Za test ostavljamo plain text 
+                Password = "123", // NAPOMENA: Za test ostavljamo plain text
                 FirstName = "Super",
                 LastName = "Admin",
                 IsSuperUser = true,
@@ -85,7 +86,47 @@ namespace SimpleWebData.Data
             );
 
             await context.SaveChangesAsync();
-            
+
+            // 6. Drugi web site (da super admin ima između čega birati) + vlastiti admin i sadržaj
+            var website2 = new WebSite
+            {
+                Code = "kamp-jadran",
+                Name = "Kamp Jadran",
+                Description = "Drugi testni WebSite"
+            };
+            context.WebSites.Add(website2);
+            await context.SaveChangesAsync();
+
+            context.Users.Add(new User
+            {
+                Username = "admin2",
+                Password = "123",
+                FirstName = "Kamp",
+                LastName = "Vlasnik",
+                IsSuperUser = false,
+                WebSiteId = website2.Id
+            });
+
+            var gallery2a = new PhotoGallery { Code = "gal-kamp", Name = "Kamp parcele", WebSiteId = website2.Id };
+            context.PhotoGalleries.Add(gallery2a);
+            await context.SaveChangesAsync();
+
+            var fac2a = new Facility { Code = "parcela-1", Name = "Parcela uz more", WebSiteId = website2.Id, PhotoGalleryId = gallery2a.Id };
+            context.Facilities.Add(fac2a);
+            await context.SaveChangesAsync();
+
+            context.Reservations.Add(
+                new Reservation { Date = DateTime.Today, Status = ReservationStatus.Available, FacilityId = fac2a.Id });
+
+            var page2Home = new Page { Code = "home", WebSiteId = website2.Id, PhotoGalleryId = gallery2a.Id };
+            context.Pages.Add(page2Home);
+            await context.SaveChangesAsync();
+
+            context.PageTexts.Add(
+                new PageText { Code = "title", Content = "Dobrodošli u Kamp Jadran", WebSiteId = website2.Id, PageId = page2Home.Id });
+
+            await context.SaveChangesAsync();
+
             Console.WriteLine("Baza je uspješno inicijalizirana i popunjena!");
         }
     }

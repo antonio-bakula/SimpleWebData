@@ -31,6 +31,7 @@ namespace SimpleWebData.Endpoints
                 if (existing == null) return Results.NotFound();
 
                 existing.Code = input.Code;
+                existing.Name = input.Name;
                 existing.Description = input.Description;
                 await db.SaveChangesAsync();
                 return Results.NoContent();

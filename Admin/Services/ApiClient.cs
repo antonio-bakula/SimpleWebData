@@ -23,6 +23,10 @@ namespace SimpleWebDataAdmin.Services
         public UserTokenData CurrentUser { get; private set; } = new();
         public string BaseUrl => _http.BaseAddress?.ToString() ?? "";
 
+        // Web site na kojem trenutno radimo. Bitno samo za super admina (može mijenjati site);
+        // šalje se kao X-WebSite-Id header pa backend usmjeri /api/admin pozive na odabrani site.
+        public int? ActiveWebSiteId { get; private set; }
+
         // Javi se kad refresh ne uspije (refresh token istekao/nevažeći) -> UI treba na ponovni login.
         public event Action? SessionExpired;
 
@@ -52,6 +56,14 @@ namespace SimpleWebDataAdmin.Services
             AccessToken = token;
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             ParseToken(token);
+        }
+
+        // Postavi aktivni web site (super admin). Header se šalje na svakom narednom zahtjevu.
+        public void SetActiveWebSite(int webSiteId)
+        {
+            ActiveWebSiteId = webSiteId;
+            _http.DefaultRequestHeaders.Remove("X-WebSite-Id");
+            _http.DefaultRequestHeaders.Add("X-WebSite-Id", webSiteId.ToString());
         }
 
         private void ParseToken(string token)

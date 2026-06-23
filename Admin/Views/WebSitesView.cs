@@ -50,7 +50,9 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var code = Dialogs.AskText("Novi Web Site", "Šifra (Code):", "novi-site");
 				if (code == null) return;
-				await Api.PostAsync<WebSite>("/api/superadmin/websites", new WebSite { Code = code, Description = "Novi Web Site" });
+				var name = Dialogs.AskText("Novi Web Site", "Naziv (Name):", code);
+				if (name == null) return;
+				await Api.PostAsync<WebSite>("/api/superadmin/websites", new WebSite { Code = code, Name = name, Description = "Novi Web Site" });
 				await ReloadSitesAsync();
 			});
 

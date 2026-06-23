@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SimpleWebData.Data;
 using SimpleWebData.Endpoints;
+using System.Security.Claims;
 using System.Text;
 
 using System.Text.Json.Serialization;
@@ -74,6 +75,25 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Super admin može raditi na bilo kojem web site-u: ako pošalje X-WebSite-Id header,
+// pregazimo WebSiteId claim za taj zahtjev pa svi /api/admin endpointi rade na odabranom site-u.
+// Obični admin nema IsSuperUser=True claim pa se header ignorira (ostaje zaključan na svoj site).
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true &&
+        context.User.HasClaim("IsSuperUser", "True") &&
+        context.Request.Headers.TryGetValue("X-WebSite-Id", out var raw) &&
+        int.TryParse(raw, out var targetSiteId) &&
+        context.User.Identity is ClaimsIdentity identity)
+    {
+        var existing = identity.FindFirst("WebSiteId");
+        if (existing != null) identity.RemoveClaim(existing);
+        identity.AddClaim(new Claim("WebSiteId", targetSiteId.ToString()));
+    }
+
+    await next();
+});
 
 // Registriranje novih Endpoint klasa
 app.MapAuthEndpoints();
