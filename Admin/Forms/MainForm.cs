@@ -133,9 +133,9 @@ namespace SimpleWebDataAdmin.Forms
 				: $"Dobro došao {_api.CurrentUser.Username}";
 
 			// TENANT MODULI
+			AddTab("Stranice web-a", new PagesView(_api));
 			AddTab("Galerije & Slike", new GalleryView(_api));
 			AddTab("Objekti (Facilities)", new FacilitiesView(_api));
-			AddTab("Stranice web-a", new PagesView(_api));
 
 			// SUPER ADMIN MODULI
 			if (isSuperAdmin)
