@@ -126,6 +126,8 @@ namespace SimpleWebDataAdmin.Forms
 
 		private void SetupUI()
 		{
+			_api.SessionExpired += OnSessionExpired;
+
 			bool isSuperAdmin = _api.CurrentUser.IsSuperUser;
 
 			this.Text = isSuperAdmin
@@ -149,6 +151,27 @@ namespace SimpleWebDataAdmin.Forms
 			// (za osvježavanje služi gumb "Osvježi" u svakom tabu).
 			mainTabControl.SelectedIndexChanged += async (s, e) =>
 				await ActivateAsync(mainTabControl.SelectedTab);
+		}
+
+		private bool _sessionExpiredShown;
+
+		// Refresh tokena nije uspio (refresh token istekao/nevažeći) -> obavijesti korisnika i zatvori
+		// aplikaciju da se ponovno prijavi. Marshaliramo na UI nit jer event može doći iz pozadinskog konteksta.
+		private void OnSessionExpired()
+		{
+			if (InvokeRequired)
+			{
+				BeginInvoke(new Action(OnSessionExpired));
+				return;
+			}
+
+			if (_sessionExpiredShown)
+				return;
+			_sessionExpiredShown = true;
+
+			MessageBox.Show("Vaša sesija je istekla. Molimo prijavite se ponovno.",
+				"Sesija istekla", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			this.Close();
 		}
 
 		// Umota view u TabPage i registrira njegov LoadAsync kao lazy loader (TabPage.Tag).
