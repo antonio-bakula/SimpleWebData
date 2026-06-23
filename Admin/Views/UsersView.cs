@@ -64,20 +64,34 @@ namespace SimpleWebDataAdmin.Views
 				if (sites == null || sites.Count == 0)
 				{ MessageBox.Show("Nema kreiranih Web Site-ova!"); return; }
 
-				using (var modal = new Form { ClientSize = new Size(300, 300), Text = "Novi Korisnik", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
+				// Dijalog se gradi odmah u skaliranim mjerama (font + sve koordinate × zoom).
+				int Z(int v) => UiZoom.Scaled(v);
+
+				using (var modal = new Form
 				{
-					var lblUser = new Label { Text = "Korisničko Ime:", Location = new Point(20, 15), AutoSize = true };
-					var txtUser = new TextBox { Location = new Point(20, 40), Width = 260 };
+					Text = "Novi korisnik",
+					StartPosition = FormStartPosition.CenterParent,
+					FormBorderStyle = FormBorderStyle.FixedDialog,
+					MaximizeBox = false,
+					MinimizeBox = false,
+					AutoScaleMode = AutoScaleMode.None,
+					Font = UiZoom.ScaledFont(9),
+					ClientSize = new Size(Z(340), Z(312))
+				})
+				{
+					var lblUser = new Label { Text = "Korisničko ime:", Location = new Point(Z(16), Z(16)), AutoSize = true };
+					var txtUser = new TextBox { Location = new Point(Z(16), Z(42)), Width = Z(300) };
 
-					var lblPass = new Label { Text = "Lozinka (Password):", Location = new Point(20, 75), AutoSize = true };
-					var txtPass = new TextBox { Location = new Point(20, 100), Width = 260, PasswordChar = '*' };
+					var lblPass = new Label { Text = "Lozinka (Password):", Location = new Point(Z(16), Z(80)), AutoSize = true };
+					var txtPass = new TextBox { Location = new Point(Z(16), Z(106)), Width = Z(300), PasswordChar = '*' };
 
-					var lblSite = new Label { Text = "Web Site:", Location = new Point(20, 135), AutoSize = true };
-					var cmbSite = new ComboBox { Location = new Point(20, 160), Width = 260, DataSource = sites, DisplayMember = "Code", ValueMember = "Id", DropDownStyle = ComboBoxStyle.DropDownList };
+					var lblSite = new Label { Text = "Web site:", Location = new Point(Z(16), Z(144)), AutoSize = true };
+					var cmbSite = new ComboBox { Location = new Point(Z(16), Z(170)), Width = Z(300), DataSource = sites, DisplayMember = "Code", ValueMember = "Id", DropDownStyle = ComboBoxStyle.DropDownList };
 
-					var chkSuper = new CheckBox { Text = "Je SuperUser?", Location = new Point(20, 200), AutoSize = true };
+					var chkSuper = new CheckBox { Text = "Je SuperUser?", Location = new Point(Z(16), Z(212)), AutoSize = true };
 
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 240), Width = 100, Height = 30, DialogResult = DialogResult.OK };
+					var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.OK };
+					var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(156), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.Cancel };
 
 					modal.Controls.Add(lblUser);
 					modal.Controls.Add(txtUser);
@@ -87,9 +101,9 @@ namespace SimpleWebDataAdmin.Views
 					modal.Controls.Add(cmbSite);
 					modal.Controls.Add(chkSuper);
 					modal.Controls.Add(btnOk);
+					modal.Controls.Add(btnCancel);
 					modal.AcceptButton = btnOk;
-
-					UiZoom.ScaleForm(modal);
+					modal.CancelButton = btnCancel;
 
 					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtUser.Text))
 					{

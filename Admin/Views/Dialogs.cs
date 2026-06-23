@@ -11,24 +11,30 @@ namespace SimpleWebDataAdmin.Views
 		// ili null ako je korisnik odustao ili ostavio prazno.
 		public static string? AskText(string title, string label, string defaultValue = "")
 		{
+			// Dijalog se gradi odmah u skaliranim mjerama (font + sve koordinate × zoom).
+			int Z(int v) => UiZoom.Scaled(v);
+
 			using var modal = new Form
 			{
-				ClientSize = new Size(320, 150),
 				Text = title,
 				StartPosition = FormStartPosition.CenterParent,
 				FormBorderStyle = FormBorderStyle.FixedDialog,
 				MaximizeBox = false,
-				MinimizeBox = false
+				MinimizeBox = false,
+				AutoScaleMode = AutoScaleMode.None,
+				Font = UiZoom.ScaledFont(9),
+				ClientSize = new Size(Z(380), Z(160))
 			};
-			var lbl = new Label { Text = label, Location = new Point(20, 15), AutoSize = true };
-			var txt = new TextBox { Location = new Point(20, 45), Width = 280, Text = defaultValue };
-			var btnOk = new Button { Text = "Spremi", Location = new Point(20, 90), Width = 100, Height = 30, DialogResult = DialogResult.OK };
+			var lbl = new Label { Text = label, Location = new Point(Z(16), Z(16)), AutoSize = true };
+			var txt = new TextBox { Location = new Point(Z(16), Z(44)), Width = Z(348), Text = defaultValue };
+			var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.OK };
+			var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(136), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.Cancel };
 			modal.Controls.Add(lbl);
 			modal.Controls.Add(txt);
 			modal.Controls.Add(btnOk);
+			modal.Controls.Add(btnCancel);
 			modal.AcceptButton = btnOk;
-
-			UiZoom.ScaleForm(modal);
+			modal.CancelButton = btnCancel;
 
 			if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txt.Text))
 				return txt.Text;

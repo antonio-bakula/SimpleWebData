@@ -236,7 +236,7 @@ namespace SimpleWebDataAdmin.Forms
 			cmbZoom = new ComboBox
 			{
 				DropDownStyle = ComboBoxStyle.DropDownList,
-				Width = 90,
+				Width = 126, // +40% da postotak stane i kad se font poveća (npr. 150%)
 				Font = new Font("Segoe UI", 10F),
 				Margin = new Padding(0, 3, 0, 0)
 			};

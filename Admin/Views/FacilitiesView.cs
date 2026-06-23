@@ -178,18 +178,32 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 				if (f == null) return;
-				using (var modal = new Form { ClientSize = new Size(250, 240), Text = "Dodaj Datume", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
+				// Dijalog se gradi odmah u skaliranim mjerama (font + sve koordinate × zoom).
+				int Z(int v) => UiZoom.Scaled(v);
+
+				using (var modal = new Form
 				{
-					var lblOd = new Label { Text = "Od datuma:", Location = new Point(20, 15), AutoSize = true };
-					var dtpOd = new DateTimePicker { Location = new Point(20, 40), Width = 180, Format = DateTimePickerFormat.Short };
+					Text = "Dodaj raspon datuma",
+					StartPosition = FormStartPosition.CenterParent,
+					FormBorderStyle = FormBorderStyle.FixedDialog,
+					MaximizeBox = false,
+					MinimizeBox = false,
+					AutoScaleMode = AutoScaleMode.None,
+					Font = UiZoom.ScaledFont(9),
+					ClientSize = new Size(Z(290), Z(272))
+				})
+				{
+					var lblOd = new Label { Text = "Od datuma:", Location = new Point(Z(16), Z(16)), AutoSize = true };
+					var dtpOd = new DateTimePicker { Location = new Point(Z(16), Z(42)), Width = Z(210), Format = DateTimePickerFormat.Short };
 
-					var lblDo = new Label { Text = "Do datuma:", Location = new Point(20, 75), AutoSize = true };
-					var dtpDo = new DateTimePicker { Location = new Point(20, 100), Width = 180, Format = DateTimePickerFormat.Short };
+					var lblDo = new Label { Text = "Do datuma:", Location = new Point(Z(16), Z(80)), AutoSize = true };
+					var dtpDo = new DateTimePicker { Location = new Point(Z(16), Z(106)), Width = Z(210), Format = DateTimePickerFormat.Short };
 
-					var lblStatus = new Label { Text = "Status:", Location = new Point(20, 135), AutoSize = true };
-					var cmbStatus = new ComboBox { Location = new Point(20, 160), Width = 180, DataSource = Enum.GetValues(typeof(ReservationStatus)), DropDownStyle = ComboBoxStyle.DropDownList };
+					var lblStatus = new Label { Text = "Status:", Location = new Point(Z(16), Z(144)), AutoSize = true };
+					var cmbStatus = new ComboBox { Location = new Point(Z(16), Z(170)), Width = Z(210), DataSource = Enum.GetValues(typeof(ReservationStatus)), DropDownStyle = ComboBoxStyle.DropDownList };
 
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 200), Width = 100, Height = 30, DialogResult = DialogResult.OK };
+					var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.OK };
+					var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(146), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.Cancel };
 
 					modal.Controls.Add(lblOd);
 					modal.Controls.Add(dtpOd);
@@ -198,9 +212,9 @@ namespace SimpleWebDataAdmin.Views
 					modal.Controls.Add(lblStatus);
 					modal.Controls.Add(cmbStatus);
 					modal.Controls.Add(btnOk);
+					modal.Controls.Add(btnCancel);
 					modal.AcceptButton = btnOk;
-
-					UiZoom.ScaleForm(modal);
+					modal.CancelButton = btnCancel;
 
 					if (modal.ShowDialog() == DialogResult.OK)
 					{

@@ -13,9 +13,9 @@ namespace SimpleWebDataAdmin.Services
     //  - ApplyFontZoom: skalira SAMO font (glavni prozor koristi docking/flow raspored
     //    pa se kontrole same preslože kad font naraste). Re-primjenjiv je više puta jer
     //    pamti originalni font svake kontrole (apsolutno skaliranje, bez gomilanja greške).
-    //  - ScaleForm: skalira i pozicije i veličine (login i modalni dijalozi koriste
-    //    apsolutno pozicioniranje pa bi im samo font razbio raspored). Primjenjuje se jednom
-    //    na svježe izgrađenu formu prije prikaza.
+    //  - Scaled()/ScaledFont(): apsolutno pozicionirane forme (login i modalni dijalozi)
+    //    grade se odmah u skaliranim mjerama. Pouzdanije od Form.Scale, koji na u kodu
+    //    građenim formama ne skalira font pouzdano.
     public static class UiZoom
     {
         // Originalni (100%) font po kontroli; slabe reference da uništene kontrole ne cure.
@@ -69,15 +69,6 @@ namespace SimpleWebDataAdmin.Services
 
             foreach (Control child in c.Controls)
                 ApplyBaseFonts(child, factor);
-        }
-
-        // Skalira formu (pozicije + veličine + font) na trenutni Factor. Za apsolutno
-        // pozicionirane forme (login, modalni dijalozi). Zvati jednom, prije prikaza.
-        public static void ScaleForm(Form form)
-        {
-            if (Math.Abs(Factor - 1.0) < 0.001)
-                return;
-            form.Scale(new SizeF((float)Factor, (float)Factor));
         }
 
         // Pomoćnik za "ručno" građene dijaloge: vrati piksel-vrijednost (koordinata/širina/visina)
