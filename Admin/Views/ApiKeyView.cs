@@ -19,9 +19,9 @@ namespace SimpleWebDataAdmin.Views
 
 			var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), FlowDirection = FlowDirection.TopDown, AutoSize = true };
 
-			var lblInfo = new Label { Text = "Upišite domene (odvojene zarezom):", AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), Margin = new Padding(5, 5, 5, 15) };
+			var lblInfo = new Label { Text = Loc.T("apikey.domainsLabel"), AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), Margin = new Padding(5, 5, 5, 15) };
 			var txtDomains = new TextBox { Width = 600, Text = "localhost, mysite.hr", Margin = new Padding(5) };
-			var btnGenKey = new Button { Text = "Generiraj Trajni Read-Only API Token", AutoSize = true, MinimumSize = new Size(300, 45), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(5, 15, 5, 25) };
+			var btnGenKey = new Button { Text = Loc.T("apikey.generateBtn"), AutoSize = true, MinimumSize = new Size(300, 45), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(5, 15, 5, 25) };
 			var txtResult = new TextBox { Width = 900, Height = 150, Multiline = true, ReadOnly = true, Font = new Font("Consolas", 10), Margin = new Padding(5) };
 
 			btnGenKey.Click += OnClick(async () =>
@@ -31,7 +31,7 @@ namespace SimpleWebDataAdmin.Views
 					domains[i] = domains[i].Trim();
 
 				var key = await Api.GenerateApiKeyAsync(domains);
-				txtResult.Text = key ?? "Greška kod spajanja na API!";
+				txtResult.Text = key ?? Loc.T("apikey.connectError");
 			});
 
 			flow.Controls.Add(lblInfo);

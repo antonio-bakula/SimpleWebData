@@ -43,7 +43,39 @@ namespace SimpleWebDataAdmin.Views
 		};
 
 		protected static void ShowError(Exception ex) =>
-			MessageBox.Show($"Došlo je do greške: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show($"{Loc.T("common.error")}: {ex.Message}", Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+		// Mapiranje naziva kolone (auto-generirane ili combo) -> ključ prijevoda zaglavlja.
+		private static readonly Dictionary<string, string> ColumnHeaderKeys = new()
+		{
+			["Code"] = "col.code",
+			["Name"] = "col.name",
+			["Description"] = "col.description",
+			["AltText"] = "col.altText",
+			["FileName"] = "col.fileName",
+			["Content"] = "col.content",
+			["Date"] = "col.date",
+			["Username"] = "col.username",
+			["FirstName"] = "col.firstName",
+			["LastName"] = "col.lastName",
+			["Email"] = "col.email",
+			["IsSuperUser"] = "col.isSuperUser",
+			["GalleryCombo"] = "col.gallery",
+			["StatusCombo"] = "col.status",
+			["SiteCombo"] = "col.webSite",
+		};
+
+		// Prevodi zaglavlja kolona prema trenutnom jeziku. Veže se na DataBindingComplete jer se
+		// auto-generirane kolone (i combo kolone) stvaraju tek pri postavljanju DataSource-a.
+		protected static void LocalizeColumns(DataGridView grid)
+		{
+			grid.DataBindingComplete += (s, e) =>
+			{
+				foreach (DataGridViewColumn col in grid.Columns)
+					if (ColumnHeaderKeys.TryGetValue(col.Name, out var key))
+						col.HeaderText = Loc.T(key);
+			};
+		}
 
 		// Standardni grid kakav koriste svi tabovi (inplace edit, full-row select, popunjava širinu).
 		protected static DataGridView MakeGrid() => new()

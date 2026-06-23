@@ -20,9 +20,9 @@ namespace SimpleWebDataAdmin.Views
 			BackColor = Color.White;
 
 			var flowTop = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(10) };
-			var btnLoad = new Button { Text = "Osvježi", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
-			var btnAddSite = new Button { Text = "Dodaj Web Site", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
-			var btnDelSite = new Button { Text = "Obriši odabrano", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
+			var btnLoad = new Button { Text = Loc.T("common.refresh"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
+			var btnAddSite = new Button { Text = Loc.T("sites.addSite"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
+			var btnDelSite = new Button { Text = Loc.T("sites.delSite"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
 
 			flowTop.Controls.Add(btnLoad);
 			flowTop.Controls.Add(btnAddSite);
@@ -30,6 +30,7 @@ namespace SimpleWebDataAdmin.Views
 
 			var grid = MakeGrid();
 			HideTechnicalColumns(grid);
+			LocalizeColumns(grid);
 
 			async Task ReloadSitesAsync()
 			{
@@ -48,9 +49,9 @@ namespace SimpleWebDataAdmin.Views
 
 			btnAddSite.Click += OnClick(async () =>
 			{
-				var code = Dialogs.AskText("Novi Web Site", "Šifra (Code):", "novi-site");
+				var code = Dialogs.AskText(Loc.T("sites.newSiteTitle"), Loc.T("sites.codeLabel"), "novi-site");
 				if (code == null) return;
-				var name = Dialogs.AskText("Novi Web Site", "Naziv (Name):", code);
+				var name = Dialogs.AskText(Loc.T("sites.newSiteTitle"), Loc.T("sites.nameLabel"), code);
 				if (name == null) return;
 				await Api.PostAsync<WebSite>("/api/superadmin/websites", new WebSite { Code = code, Name = name, Description = "Novi Web Site" });
 				await ReloadSitesAsync();
@@ -58,7 +59,7 @@ namespace SimpleWebDataAdmin.Views
 
 			btnDelSite.Click += OnClick(async () =>
 			{
-				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabrani Web Site?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (grid.SelectedRows.Count > 0 && MessageBox.Show(Loc.T("sites.delConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					var w = grid.SelectedRows[0].DataBoundItem as WebSite;
 					if (w == null) return;

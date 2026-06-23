@@ -17,8 +17,9 @@ namespace SimpleWebDataAdmin
             Application.ThreadException += (s, e) =>
                 MessageBox.Show($"Došlo je do greške: {e.Exception.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-            // Učitaj zapamćenu veličinu prikaza (zoom) da se primijeni već na login.
+            // Učitaj zapamćene postavke (veličina prikaza + jezik) da se primijene već na login.
             UiZoom.Load();
+            Loc.Load();
 
             using var loginForm = new Forms.LoginForm();
             if (loginForm.ShowDialog() == DialogResult.OK)

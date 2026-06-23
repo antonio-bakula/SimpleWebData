@@ -25,11 +25,11 @@ namespace SimpleWebDataAdmin.Views
 			split.Resize += (s, e) => { split.SplitterDistance = split.Height / 3; };
 
 			// --- TOP: Galerije ---
-			var gTop = new GroupBox { Text = "1. Galerije", Dock = DockStyle.Fill, Padding = new Padding(10) };
+			var gTop = new GroupBox { Text = Loc.T("gallery.group1"), Dock = DockStyle.Fill, Padding = new Padding(10) };
 			var flowTop = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(5) };
-			var btnLoad = new Button { Text = "Osvježi", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
-			var btnAddGal = new Button { Text = "Dodaj Galeriju", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
-			var btnDelGal = new Button { Text = "Obriši Galeriju", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
+			var btnLoad = new Button { Text = Loc.T("common.refresh"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
+			var btnAddGal = new Button { Text = Loc.T("gallery.addGallery"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
+			var btnDelGal = new Button { Text = Loc.T("gallery.delGallery"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
 			flowTop.Controls.Add(btnLoad);
 			flowTop.Controls.Add(btnAddGal);
 			flowTop.Controls.Add(btnDelGal);
@@ -37,15 +37,16 @@ namespace SimpleWebDataAdmin.Views
 			// Bitno: Isključujemo ReadOnly da dozvolimo inplace edit za Code, Name, Description (Id skrivamo)
 			var gridGalleries = MakeGrid();
 			HideTechnicalColumns(gridGalleries);
+			LocalizeColumns(gridGalleries);
 			gTop.Controls.Add(gridGalleries);
 			gTop.Controls.Add(flowTop);
 
 			// --- BOTTOM: Slike ---
-			var gBot = new GroupBox { Text = "2. Slike u odabranoj galeriji", Dock = DockStyle.Fill, Padding = new Padding(10) };
+			var gBot = new GroupBox { Text = Loc.T("gallery.group2"), Dock = DockStyle.Fill, Padding = new Padding(10) };
 			var flowBot = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(5) };
-			var btnUpload = new Button { Text = "Dodaj Sliku", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen, Enabled = false };
-			var btnChangeImg = new Button { Text = "Izmijeni Sliku", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightBlue, Enabled = false };
-			var btnDelImg = new Button { Text = "Obriši Sliku", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose, Enabled = false };
+			var btnUpload = new Button { Text = Loc.T("gallery.addImage"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen, Enabled = false };
+			var btnChangeImg = new Button { Text = Loc.T("gallery.changeImage"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightBlue, Enabled = false };
+			var btnDelImg = new Button { Text = Loc.T("gallery.delImage"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose, Enabled = false };
 			flowBot.Controls.Add(btnUpload);
 			flowBot.Controls.Add(btnChangeImg);
 			flowBot.Controls.Add(btnDelImg);
@@ -56,6 +57,7 @@ namespace SimpleWebDataAdmin.Views
 			// Dozvoli inplace edit AltText/itd.
 			var gridPhotos = MakeGrid();
 			HideTechnicalColumns(gridPhotos);
+			LocalizeColumns(gridPhotos);
 			// I FileName je ReadOnly interno (samo sa ChangeImg)
 			gridPhotos.CellBeginEdit += (s, e) => { if (gridPhotos.Columns[e.ColumnIndex].Name == "FileName") e.Cancel = true; };
 
@@ -180,7 +182,7 @@ namespace SimpleWebDataAdmin.Views
 				if (res != null)
 					await ReloadGalleriesAsync(res.Id);
 				else
-					MessageBox.Show("Dodavanje galerije nije uspjelo.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					MessageBox.Show(Loc.T("gallery.addFailed"), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 			});
 
 			btnDelGal.Click += OnClick(async () =>
@@ -189,7 +191,7 @@ namespace SimpleWebDataAdmin.Views
 					return;
 				var g = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
 				if (g == null) return;
-				if (MessageBox.Show("Obriši?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (MessageBox.Show(Loc.T("gallery.delConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
 					await ReloadGalleriesAsync();
@@ -216,14 +218,14 @@ namespace SimpleWebDataAdmin.Views
 				if (gallery == null) return;
 				var galleryId = gallery.Id;
 
-				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
+				using var ofd = new OpenFileDialog { Filter = $"{Loc.T("gallery.imageFilter")}|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
 					bool success = await Api.UploadPhotoAsync(galleryId, ofd.FileName, "Nova slika");
 					if (success)
 						await ReloadGalleriesAsync(galleryId);   // #6: osvježi grid i ostani na istoj galeriji
 					else
-						MessageBox.Show("Upload slike nije uspio.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						MessageBox.Show(Loc.T("gallery.uploadFailed"), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			});
 
@@ -234,14 +236,14 @@ namespace SimpleWebDataAdmin.Views
 				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
 				if (p == null) return;
 				var galleryId = SelectedGalleryId();
-				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
+				using var ofd = new OpenFileDialog { Filter = $"{Loc.T("gallery.imageFilter")}|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
 					bool success = await Api.UpdatePhotoAsync(p.Id, ofd.FileName, p.AltText);
 					if (success)
 						await ReloadGalleriesAsync(galleryId);   // osvježi prikaz nove slike
 					else
-						MessageBox.Show("Izmjena slike nije uspjela.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						MessageBox.Show(Loc.T("gallery.changeFailed"), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			});
 
@@ -252,7 +254,7 @@ namespace SimpleWebDataAdmin.Views
 				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
 				if (p == null) return;
 				var galleryId = SelectedGalleryId();
-				if (MessageBox.Show("Obriši sliku?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (MessageBox.Show(Loc.T("gallery.delImageConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await Api.DeleteAsync($"/api/admin/photos/{p.Id}");
 					await ReloadGalleriesAsync(galleryId);

@@ -27,8 +27,8 @@ namespace SimpleWebDataAdmin.Views
 			};
 			var lbl = new Label { Text = label, Location = new Point(Z(16), Z(16)), AutoSize = true };
 			var txt = new TextBox { Location = new Point(Z(16), Z(44)), Width = Z(348), Text = defaultValue };
-			var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.OK };
-			var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(136), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.Cancel };
+			var btnOk = new Button { Text = Loc.T("common.save"), Location = new Point(Z(16), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.OK };
+			var btnCancel = new Button { Text = Loc.T("common.cancel"), Location = new Point(Z(136), Z(104)), Width = Z(110), Height = Z(36), DialogResult = DialogResult.Cancel };
 			modal.Controls.Add(lbl);
 			modal.Controls.Add(txt);
 			modal.Controls.Add(btnOk);

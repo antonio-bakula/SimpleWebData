@@ -20,9 +20,9 @@ namespace SimpleWebDataAdmin.Views
 			BackColor = Color.White;
 
 			var flowTop = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(10) };
-			var btnLoad = new Button { Text = "Osvježi", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
-			var btnAddUser = new Button { Text = "Dodaj Korisnika", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
-			var btnDelUser = new Button { Text = "Obriši Korisnika", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
+			var btnLoad = new Button { Text = Loc.T("common.refresh"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGray };
+			var btnAddUser = new Button { Text = Loc.T("users.addUser"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen };
+			var btnDelUser = new Button { Text = Loc.T("users.delUser"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.MistyRose };
 
 			flowTop.Controls.Add(btnLoad);
 			flowTop.Controls.Add(btnAddUser);
@@ -30,6 +30,7 @@ namespace SimpleWebDataAdmin.Views
 
 			var grid = MakeGrid();
 			HideTechnicalColumns(grid);
+			LocalizeColumns(grid);
 
 			async Task ReloadUsersAsync()
 			{
@@ -38,7 +39,7 @@ namespace SimpleWebDataAdmin.Views
 
 				if (!grid.Columns.Contains("SiteCombo"))
 				{
-					var combo = new DataGridViewComboBoxColumn { Name = "SiteCombo", HeaderText = "Web Site (Code)", DataPropertyName = "WebSiteId", ValueMember = "Id", DisplayMember = "Code", DataSource = sites };
+					var combo = new DataGridViewComboBoxColumn { Name = "SiteCombo", HeaderText = Loc.T("col.webSite"), DataPropertyName = "WebSiteId", ValueMember = "Id", DisplayMember = "Code", DataSource = sites };
 					grid.Columns.Add(combo);
 				}
 				else
@@ -62,14 +63,14 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var sites = await Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
 				if (sites == null || sites.Count == 0)
-				{ MessageBox.Show("Nema kreiranih Web Site-ova!"); return; }
+				{ MessageBox.Show(Loc.T("users.noSites")); return; }
 
 				// Dijalog se gradi odmah u skaliranim mjerama (font + sve koordinate × zoom).
 				int Z(int v) => UiZoom.Scaled(v);
 
 				using (var modal = new Form
 				{
-					Text = "Novi korisnik",
+					Text = Loc.T("users.dialogTitle"),
 					StartPosition = FormStartPosition.CenterParent,
 					FormBorderStyle = FormBorderStyle.FixedDialog,
 					MaximizeBox = false,
@@ -79,19 +80,19 @@ namespace SimpleWebDataAdmin.Views
 					ClientSize = new Size(Z(340), Z(312))
 				})
 				{
-					var lblUser = new Label { Text = "Korisničko ime:", Location = new Point(Z(16), Z(16)), AutoSize = true };
+					var lblUser = new Label { Text = Loc.T("users.username"), Location = new Point(Z(16), Z(16)), AutoSize = true };
 					var txtUser = new TextBox { Location = new Point(Z(16), Z(42)), Width = Z(300) };
 
-					var lblPass = new Label { Text = "Lozinka (Password):", Location = new Point(Z(16), Z(80)), AutoSize = true };
+					var lblPass = new Label { Text = Loc.T("users.password"), Location = new Point(Z(16), Z(80)), AutoSize = true };
 					var txtPass = new TextBox { Location = new Point(Z(16), Z(106)), Width = Z(300), PasswordChar = '*' };
 
-					var lblSite = new Label { Text = "Web site:", Location = new Point(Z(16), Z(144)), AutoSize = true };
+					var lblSite = new Label { Text = Loc.T("users.webSite"), Location = new Point(Z(16), Z(144)), AutoSize = true };
 					var cmbSite = new ComboBox { Location = new Point(Z(16), Z(170)), Width = Z(300), DataSource = sites, DisplayMember = "Code", ValueMember = "Id", DropDownStyle = ComboBoxStyle.DropDownList };
 
-					var chkSuper = new CheckBox { Text = "Je SuperUser?", Location = new Point(Z(16), Z(212)), AutoSize = true };
+					var chkSuper = new CheckBox { Text = Loc.T("users.isSuper"), Location = new Point(Z(16), Z(212)), AutoSize = true };
 
-					var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.OK };
-					var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(156), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.Cancel };
+					var btnOk = new Button { Text = Loc.T("common.save"), Location = new Point(Z(16), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.OK };
+					var btnCancel = new Button { Text = Loc.T("common.cancel"), Location = new Point(Z(156), Z(250)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.Cancel };
 
 					modal.Controls.Add(lblUser);
 					modal.Controls.Add(txtUser);
@@ -122,7 +123,7 @@ namespace SimpleWebDataAdmin.Views
 
 			btnDelUser.Click += OnClick(async () =>
 			{
-				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabranog korisnika?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (grid.SelectedRows.Count > 0 && MessageBox.Show(Loc.T("users.delConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					var u = grid.SelectedRows[0].DataBoundItem as User;
 					if (u == null) return;

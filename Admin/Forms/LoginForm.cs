@@ -12,6 +12,11 @@ namespace SimpleWebDataAdmin.Forms
 		private TextBox txtPassword = null!;
 		private Button btnLogin = null!;
 		private Label lblError = null!;
+		private Label lblTitle = null!;
+		private Label lblApi = null!;
+		private Label lblUser = null!;
+		private Label lblPass = null!;
+		private ComboBox cmbLang = null!;
 
 		public LoginForm()
 		{
@@ -24,7 +29,6 @@ namespace SimpleWebDataAdmin.Forms
 			// AutoScaleMode.None da se naše ručno skaliranje ne sudara s automatskim.
 			int Z(int v) => UiZoom.Scaled(v);
 
-			this.Text = "Login - SimpleWebData Admin";
 			this.StartPosition = FormStartPosition.CenterScreen;
 			this.FormBorderStyle = FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
@@ -35,36 +39,49 @@ namespace SimpleWebDataAdmin.Forms
 			// donji rub se pomakne da je u cijelosti vidljiva (umjesto da bude odrezana).
 			this.AutoSize = true;
 			this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-			this.MinimumSize = new Size(Z(420), Z(360));
+			this.MinimumSize = new Size(Z(450), Z(410));
 			this.Padding = new Padding(0, 0, 0, Z(16));
 
 			var pnlTop = new Panel { Dock = DockStyle.Top, Height = Z(60), BackColor = Color.SteelBlue };
-			var lblTitle = new Label { Text = "Sustav za upravljanje", ForeColor = Color.White, Font = UiZoom.ScaledFont(12, FontStyle.Bold), Location = new Point(Z(20), Z(15)), AutoSize = true };
+			lblTitle = new Label { ForeColor = Color.White, Font = UiZoom.ScaledFont(12, FontStyle.Bold), Location = new Point(Z(20), Z(15)), AutoSize = true };
 			pnlTop.Controls.Add(lblTitle);
 
-			var lblApi = new Label { Text = "API URL:", Location = new Point(Z(30), Z(90)), AutoSize = true };
-			txtApiUrl = new TextBox { Location = new Point(Z(140), Z(90)), Width = Z(230), Text = "http://localhost:5072" };
+			// Izbor jezika (oznaka je namjerno dvojezična da je uvijek jasna).
+			var lblLang = new Label { Text = "Jezik / Language:", Location = new Point(Z(30), Z(82)), AutoSize = true };
+			cmbLang = new ComboBox { Location = new Point(Z(185), Z(78)), Width = Z(235), DropDownStyle = ComboBoxStyle.DropDownList };
+			cmbLang.Items.AddRange(new object[] { "Hrvatski", "English" });
+			cmbLang.SelectedIndex = Loc.Language == "en" ? 1 : 0;
+			cmbLang.SelectedIndexChanged += (s, e) =>
+			{
+				Loc.Language = cmbLang.SelectedIndex == 1 ? "en" : "hr";
+				ApplyTexts();
+			};
 
-			var lblUser = new Label { Text = "Username:", Location = new Point(Z(30), Z(130)), AutoSize = true };
-			txtUsername = new TextBox { Location = new Point(Z(140), Z(130)), Width = Z(230) };
+			lblApi = new Label { Location = new Point(Z(30), Z(122)), AutoSize = true };
+			txtApiUrl = new TextBox { Location = new Point(Z(185), Z(122)), Width = Z(235), Text = "http://localhost:5072" };
 
-			var lblPass = new Label { Text = "Password:", Location = new Point(Z(30), Z(170)), AutoSize = true };
-			txtPassword = new TextBox { Location = new Point(Z(140), Z(170)), Width = Z(230), UseSystemPasswordChar = true };
+			lblUser = new Label { Location = new Point(Z(30), Z(162)), AutoSize = true };
+			txtUsername = new TextBox { Location = new Point(Z(185), Z(162)), Width = Z(235) };
+
+			lblPass = new Label { Location = new Point(Z(30), Z(202)), AutoSize = true };
+			txtPassword = new TextBox { Location = new Point(Z(185), Z(202)), Width = Z(235), UseSystemPasswordChar = true };
 
 #if DEBUG
 			txtUsername.Text = "admin";
 			txtPassword.Text = "123";
 #endif
 
-			btnLogin = new Button { Text = "Prijava", Location = new Point(Z(140), Z(220)), Width = Z(230), Height = Z(40), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+			btnLogin = new Button { Location = new Point(Z(185), Z(252)), Width = Z(235), Height = Z(40), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
 			btnLogin.FlatAppearance.BorderSize = 0;
 			btnLogin.Click += BtnLogin_Click;
 
 			// AutoSize + fiksna širina (Min == Max) => label se prelama u više redaka i raste u visinu;
 			// tekst ostaje centriran, a forma (AutoSize) naraste s njim pa poruka nikad ne ispadne van.
-			lblError = new Label { ForeColor = Color.Crimson, Location = new Point(Z(30), Z(275)), AutoSize = true, MinimumSize = new Size(Z(340), 0), MaximumSize = new Size(Z(340), 0), TextAlign = ContentAlignment.MiddleCenter };
+			lblError = new Label { ForeColor = Color.Crimson, Location = new Point(Z(30), Z(307)), AutoSize = true, MinimumSize = new Size(Z(340), 0), MaximumSize = new Size(Z(340), 0), TextAlign = ContentAlignment.MiddleCenter };
 
 			this.Controls.Add(pnlTop);
+			this.Controls.Add(lblLang);
+			this.Controls.Add(cmbLang);
 			this.Controls.Add(lblApi);
 			this.Controls.Add(txtApiUrl);
 			this.Controls.Add(lblUser);
@@ -75,6 +92,19 @@ namespace SimpleWebDataAdmin.Forms
 			this.Controls.Add(lblError);
 
 			this.AcceptButton = btnLogin;
+
+			ApplyTexts();
+		}
+
+		// Postavi sve tekstove prema trenutnom jeziku (poziva se i kod promjene jezika na loginu).
+		private void ApplyTexts()
+		{
+			this.Text = Loc.T("login.windowTitle");
+			lblTitle.Text = Loc.T("login.title");
+			lblApi.Text = Loc.T("login.apiUrl");
+			lblUser.Text = Loc.T("login.username");
+			lblPass.Text = Loc.T("login.password");
+			btnLogin.Text = Loc.T("login.button");
 		}
 
 		private async void BtnLogin_Click(object? sender, EventArgs e)
@@ -95,13 +125,13 @@ namespace SimpleWebDataAdmin.Forms
 				}
 				else
 				{
-					lblError.Text = "Greška kod prijave. Pokušajte ponovno.";
+					lblError.Text = Loc.T("login.errLogin");
 					btnLogin.Enabled = true;
 				}
 			}
 			catch (Exception ex)
 			{
-				lblError.Text = "Nije moguće spojiti API: " + ex.Message;
+				lblError.Text = Loc.T("login.errConnect") + ex.Message;
 				btnLogin.Enabled = true;
 			}
 		}

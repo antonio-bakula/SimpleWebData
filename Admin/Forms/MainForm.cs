@@ -20,6 +20,7 @@ namespace SimpleWebDataAdmin.Forms
 		public int Height { get; set; }
 		public FormWindowState WindowState { get; set; }
 		public double Zoom { get; set; } = 1.0;
+		public string Language { get; set; } = "hr";
 	}
 
 	public class MainForm : Form
@@ -95,7 +96,7 @@ namespace SimpleWebDataAdmin.Forms
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"Greška kod učitavanja web site konteksta: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show(Loc.T("main.errLoadSiteContext", ex.Message), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 
 			// Učitavamo samo trenutno odabrani tab; ostali se učitavaju lijeno kad se prvi put otvore.
@@ -119,7 +120,7 @@ namespace SimpleWebDataAdmin.Forms
 			catch (Exception ex)
 			{
 				activatedTabs.Remove(tab); // dopusti ponovni pokušaj kod sljedećeg prikaza taba
-				MessageBox.Show($"Greška kod učitavanja taba: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show(Loc.T("main.errLoadTab", ex.Message), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 		}
 
@@ -128,7 +129,7 @@ namespace SimpleWebDataAdmin.Forms
 			base.OnFormClosing(e);
 			try
 			{
-				var s = new WindowSettings { WindowState = this.WindowState, Zoom = UiZoom.Factor };
+				var s = new WindowSettings { WindowState = this.WindowState, Zoom = UiZoom.Factor, Language = Loc.Language };
 				if (this.WindowState == FormWindowState.Normal)
 				{
 					s.X = this.Location.X;
@@ -155,22 +156,22 @@ namespace SimpleWebDataAdmin.Forms
 			bool isSuperAdmin = _api.CurrentUser.IsSuperUser;
 
 			this.Text = isSuperAdmin
-				? "Super Admin - SimpleWebData"
-				: $"Dobro došao {_api.CurrentUser.Username}";
+				? Loc.T("main.titleSuper")
+				: Loc.T("main.titleWelcome", _api.CurrentUser.Username);
 
 			BuildSiteHeader(isSuperAdmin);
 
 			// TENANT MODULI
-			AddTab("Stranice web-a", new PagesView(_api));
-			AddTab("Galerije & Slike", new GalleryView(_api));
-			AddTab("Objekti (Facilities)", new FacilitiesView(_api));
+			AddTab(Loc.T("tab.pages"), new PagesView(_api));
+			AddTab(Loc.T("tab.galleries"), new GalleryView(_api));
+			AddTab(Loc.T("tab.facilities"), new FacilitiesView(_api));
 
 			// SUPER ADMIN MODULI
 			if (isSuperAdmin)
 			{
-				AddTab("API Ključ", new ApiKeyView(_api));
-				AddTab("[SA] Web Sites", new WebSitesView(_api));
-				AddTab("[SA] Korisnici", new UsersView(_api));
+				AddTab(Loc.T("tab.apiKey"), new ApiKeyView(_api));
+				AddTab(Loc.T("tab.saWebSites"), new WebSitesView(_api));
+				AddTab(Loc.T("tab.saUsers"), new UsersView(_api));
 			}
 
 			// Lijeno učitavanje pri prvom prelasku na tab. Kasniji prelasci ne re-fetchaju
@@ -194,7 +195,7 @@ namespace SimpleWebDataAdmin.Forms
 
 			var lblPrefix = new Label
 			{
-				Text = "Aktivni web site:",
+				Text = Loc.T("main.activeSite"),
 				AutoSize = true,
 				Font = new Font("Segoe UI", 10F, FontStyle.Bold),
 				Margin = new Padding(0, 6, 10, 0)
@@ -228,7 +229,7 @@ namespace SimpleWebDataAdmin.Forms
 			// Zoom kontrola (veličina prikaza) - vidljiva svima.
 			var lblZoom = new Label
 			{
-				Text = "Veličina prikaza:",
+				Text = Loc.T("main.displaySize"),
 				AutoSize = true,
 				Font = new Font("Segoe UI", 10F, FontStyle.Bold),
 				Margin = new Padding(40, 6, 8, 0)
@@ -294,13 +295,13 @@ namespace SimpleWebDataAdmin.Forms
 				cmbSite.SelectedIndexChanged += async (s, e) =>
 				{
 					try { await OnSiteChangedAsync(); }
-					catch (Exception ex) { MessageBox.Show($"Greška kod promjene web site-a: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+					catch (Exception ex) { MessageBox.Show(Loc.T("main.errChangeSite", ex.Message), Loc.T("common.error"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
 				};
 			}
 			else
 			{
 				var site = await _api.GetAsync<WebSite>("/api/admin/current-website");
-				lblActiveSite.Text = site != null ? $"{site.Name} ({site.Code})" : "(nepoznato)";
+				lblActiveSite.Text = site != null ? $"{site.Name} ({site.Code})" : Loc.T("main.unknown");
 			}
 		}
 
@@ -334,8 +335,8 @@ namespace SimpleWebDataAdmin.Forms
 				return;
 			_sessionExpiredShown = true;
 
-			MessageBox.Show("Vaša sesija je istekla. Molimo prijavite se ponovno.",
-				"Sesija istekla", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			MessageBox.Show(Loc.T("main.sessionExpiredMsg"),
+				Loc.T("main.sessionExpiredTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
 			this.Close();
 		}
 

@@ -23,30 +23,32 @@ namespace SimpleWebDataAdmin.Views
 			split.Resize += (s, e) => { split.SplitterDistance = (int)(split.Width * 0.66); };
 
 			// --- LJEVI DIO: Objekti ---
-			var gLeft = new GroupBox { Text = "1. Objekti", Dock = DockStyle.Fill, Padding = new Padding(10) };
+			var gLeft = new GroupBox { Text = Loc.T("fac.group1"), Dock = DockStyle.Fill, Padding = new Padding(10) };
 			var flowLeft = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(5) };
-			var btnLoad = new Button { Text = "Osvježi", AutoSize = true, MinimumSize = new Size(100, 40), Margin = new Padding(2), BackColor = Color.LightGray };
-			var btnAddFac = new Button { Text = "Dodaj", AutoSize = true, MinimumSize = new Size(80, 40), Margin = new Padding(2), BackColor = Color.LightGreen };
-			var btnDelFac = new Button { Text = "Obriši", AutoSize = true, MinimumSize = new Size(80, 40), Margin = new Padding(2), BackColor = Color.MistyRose };
+			var btnLoad = new Button { Text = Loc.T("common.refresh"), AutoSize = true, MinimumSize = new Size(100, 40), Margin = new Padding(2), BackColor = Color.LightGray };
+			var btnAddFac = new Button { Text = Loc.T("common.add"), AutoSize = true, MinimumSize = new Size(80, 40), Margin = new Padding(2), BackColor = Color.LightGreen };
+			var btnDelFac = new Button { Text = Loc.T("common.delete"), AutoSize = true, MinimumSize = new Size(80, 40), Margin = new Padding(2), BackColor = Color.MistyRose };
 			flowLeft.Controls.Add(btnLoad);
 			flowLeft.Controls.Add(btnAddFac);
 			flowLeft.Controls.Add(btnDelFac);
 
 			var gridFac = MakeGrid();
 			HideTechnicalColumns(gridFac);
+			LocalizeColumns(gridFac);
 			gLeft.Controls.Add(gridFac);
 			gLeft.Controls.Add(flowLeft);
 
 			// --- DESNI DIO: Datumi i Zauzetosti ---
-			var gRight = new GroupBox { Text = "2. Zauzetost odabranog objekta", Dock = DockStyle.Fill, Padding = new Padding(10) };
+			var gRight = new GroupBox { Text = Loc.T("fac.group2"), Dock = DockStyle.Fill, Padding = new Padding(10) };
 			var flowRight = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(5) };
-			var btnAddDates = new Button { Text = "Dodaj Raspon Datuma", AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen, Enabled = false };
-			var btnDelDate = new Button { Text = "Obriši Datum", AutoSize = true, MinimumSize = new Size(100, 40), Margin = new Padding(5), BackColor = Color.MistyRose, Enabled = false };
+			var btnAddDates = new Button { Text = Loc.T("fac.addDates"), AutoSize = true, MinimumSize = new Size(130, 40), Margin = new Padding(5), BackColor = Color.LightGreen, Enabled = false };
+			var btnDelDate = new Button { Text = Loc.T("fac.delDate"), AutoSize = true, MinimumSize = new Size(100, 40), Margin = new Padding(5), BackColor = Color.MistyRose, Enabled = false };
 			flowRight.Controls.Add(btnAddDates);
 			flowRight.Controls.Add(btnDelDate);
 
 			var gridRes = MakeGrid();
 			HideTechnicalColumns(gridRes);
+			LocalizeColumns(gridRes);
 			gRight.Controls.Add(gridRes);
 			gRight.Controls.Add(flowRight);
 
@@ -77,7 +79,7 @@ namespace SimpleWebDataAdmin.Views
 
 				if (!gridFac.Columns.Contains("GalleryCombo"))
 				{
-					var combo = new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = "Galerija (Code)", DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", DataSource = gals };
+					var combo = new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = Loc.T("col.gallery"), DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", DataSource = gals };
 					gridFac.Columns.Add(combo);
 				}
 				else
@@ -102,7 +104,7 @@ namespace SimpleWebDataAdmin.Views
 
 				if (!gridRes.Columns.Contains("StatusCombo"))
 				{
-					var comboStatus = new DataGridViewComboBoxColumn { Name = "StatusCombo", HeaderText = "Status", DataPropertyName = "Status", DataSource = Enum.GetValues(typeof(ReservationStatus)) };
+					var comboStatus = new DataGridViewComboBoxColumn { Name = "StatusCombo", HeaderText = Loc.T("col.status"), DataPropertyName = "Status", DataSource = Enum.GetValues(typeof(ReservationStatus)) };
 					gridRes.Columns.Add(comboStatus);
 				}
 				gridRes.DataSource = ToBindingList(reservations?.OrderBy(x => x.Date).ToList());
@@ -142,7 +144,7 @@ namespace SimpleWebDataAdmin.Views
 			// BRISANJE I DODAVANJE OBJEKATA
 			btnDelFac.Click += OnClick(async () =>
 			{
-				if (gridFac.SelectedRows.Count > 0 && MessageBox.Show("Obrisati objekt?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (gridFac.SelectedRows.Count > 0 && MessageBox.Show(Loc.T("fac.delFacConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 					if (f == null) return;
@@ -153,7 +155,7 @@ namespace SimpleWebDataAdmin.Views
 
 			btnAddFac.Click += OnClick(async () =>
 			{
-				var code = Dialogs.AskText("Novi Objekt", "Šifra Objekta (Code):", "novi-objekt");
+				var code = Dialogs.AskText(Loc.T("fac.newFacTitle"), Loc.T("fac.newFacLabel"), "novi-objekt");
 				if (code == null) return;
 				await Api.PostAsync<Facility>("/api/admin/facilities", new Facility { Code = code, Name = "Novi Objekt" });
 				await ReloadFacilitiesAsync();
@@ -161,7 +163,7 @@ namespace SimpleWebDataAdmin.Views
 
 			btnDelDate.Click += OnClick(async () =>
 			{
-				if (gridRes.SelectedRows.Count > 0 && MessageBox.Show("Obrisati zapis datuma?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				if (gridRes.SelectedRows.Count > 0 && MessageBox.Show(Loc.T("fac.delDateConfirm"), Loc.T("common.confirm"), MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					var r = gridRes.SelectedRows[0].DataBoundItem as Reservation;
 					if (r == null) return;
@@ -183,7 +185,7 @@ namespace SimpleWebDataAdmin.Views
 
 				using (var modal = new Form
 				{
-					Text = "Dodaj raspon datuma",
+					Text = Loc.T("fac.datesDialogTitle"),
 					StartPosition = FormStartPosition.CenterParent,
 					FormBorderStyle = FormBorderStyle.FixedDialog,
 					MaximizeBox = false,
@@ -193,17 +195,17 @@ namespace SimpleWebDataAdmin.Views
 					ClientSize = new Size(Z(290), Z(272))
 				})
 				{
-					var lblOd = new Label { Text = "Od datuma:", Location = new Point(Z(16), Z(16)), AutoSize = true };
+					var lblOd = new Label { Text = Loc.T("fac.fromDate"), Location = new Point(Z(16), Z(16)), AutoSize = true };
 					var dtpOd = new DateTimePicker { Location = new Point(Z(16), Z(42)), Width = Z(210), Format = DateTimePickerFormat.Short };
 
-					var lblDo = new Label { Text = "Do datuma:", Location = new Point(Z(16), Z(80)), AutoSize = true };
+					var lblDo = new Label { Text = Loc.T("fac.toDate"), Location = new Point(Z(16), Z(80)), AutoSize = true };
 					var dtpDo = new DateTimePicker { Location = new Point(Z(16), Z(106)), Width = Z(210), Format = DateTimePickerFormat.Short };
 
-					var lblStatus = new Label { Text = "Status:", Location = new Point(Z(16), Z(144)), AutoSize = true };
+					var lblStatus = new Label { Text = Loc.T("fac.status"), Location = new Point(Z(16), Z(144)), AutoSize = true };
 					var cmbStatus = new ComboBox { Location = new Point(Z(16), Z(170)), Width = Z(210), DataSource = Enum.GetValues(typeof(ReservationStatus)), DropDownStyle = ComboBoxStyle.DropDownList };
 
-					var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.OK };
-					var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(146), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.Cancel };
+					var btnOk = new Button { Text = Loc.T("common.save"), Location = new Point(Z(16), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.OK };
+					var btnCancel = new Button { Text = Loc.T("common.cancel"), Location = new Point(Z(146), Z(214)), Width = Z(120), Height = Z(38), DialogResult = DialogResult.Cancel };
 
 					modal.Controls.Add(lblOd);
 					modal.Controls.Add(dtpOd);
@@ -221,7 +223,7 @@ namespace SimpleWebDataAdmin.Views
 						var start = dtpOd.Value.Date;
 						var end = dtpDo.Value.Date;
 						if (start > end)
-						{ MessageBox.Show("Datum DO mora biti >= OD!"); return; }
+						{ MessageBox.Show(Loc.T("fac.dateRangeError")); return; }
 
 						var status = (ReservationStatus)cmbStatus.SelectedItem!;
 
