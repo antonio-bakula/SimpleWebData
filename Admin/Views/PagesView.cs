@@ -154,24 +154,40 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 				if (p == null) return;
-				using (var modal = new Form { ClientSize = new Size(400, 300), Text = "Novi Tekst", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
+
+				// Dijalog se gradi odmah u skaliranim mjerama (font + sve koordinate × zoom).
+				// AutoScaleMode.None da se naše ručno skaliranje ne sudara s automatskim.
+				int Z(int v) => UiZoom.Scaled(v);
+
+				using (var modal = new Form
 				{
-					var lblCode = new Label { Text = "Šifra tekst bloka (Code) (Paziti da je unikatna):", Location = new Point(20, 15), AutoSize = true };
-					var txtCode = new TextBox { Location = new Point(20, 40), Width = 360, Text = "blok-vazno" };
+					Text = "Novi tekst stranice",
+					StartPosition = FormStartPosition.CenterParent,
+					FormBorderStyle = FormBorderStyle.FixedDialog,
+					MaximizeBox = false,
+					MinimizeBox = false,
+					AutoScaleMode = AutoScaleMode.None,
+					Font = UiZoom.ScaledFont(9),
+					ClientSize = new Size(Z(470), Z(340))
+				})
+				{
+					var lblCode = new Label { Text = "Šifra tekst bloka (mora biti jedinstvena):", Location = new Point(Z(16), Z(16)), AutoSize = true };
+					var txtCode = new TextBox { Location = new Point(Z(16), Z(42)), Width = Z(438), Text = "blok-vazno" };
 
-					var lblContent = new Label { Text = "Sadržaj (Content):", Location = new Point(20, 75), AutoSize = true };
-					var txtContent = new TextBox { Location = new Point(20, 100), Width = 360, Height = 140, Multiline = true, ScrollBars = ScrollBars.Vertical };
+					var lblContent = new Label { Text = "Sadržaj (Content):", Location = new Point(Z(16), Z(82)), AutoSize = true };
+					var txtContent = new TextBox { Location = new Point(Z(16), Z(108)), Width = Z(438), Height = Z(158), Multiline = true, ScrollBars = ScrollBars.Vertical };
 
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 255), Width = 100, Height = 30, DialogResult = DialogResult.OK };
+					var btnOk = new Button { Text = "Spremi", Location = new Point(Z(16), Z(286)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.OK };
+					var btnCancel = new Button { Text = "Odustani", Location = new Point(Z(156), Z(286)), Width = Z(130), Height = Z(38), DialogResult = DialogResult.Cancel };
 
 					modal.Controls.Add(lblCode);
 					modal.Controls.Add(txtCode);
 					modal.Controls.Add(lblContent);
 					modal.Controls.Add(txtContent);
 					modal.Controls.Add(btnOk);
+					modal.Controls.Add(btnCancel);
 					modal.AcceptButton = btnOk;
-
-					UiZoom.ScaleForm(modal);
+					modal.CancelButton = btnCancel;
 
 					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
 					{

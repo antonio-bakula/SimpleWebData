@@ -80,6 +80,14 @@ namespace SimpleWebDataAdmin.Services
             form.Scale(new SizeF((float)Factor, (float)Factor));
         }
 
+        // Pomoćnik za "ručno" građene dijaloge: vrati piksel-vrijednost (koordinata/širina/visina)
+        // pomnoženu trenutnim faktorom zooma. Tako dijalog gradimo odmah u skaliranim mjerama.
+        public static int Scaled(int value) => (int)Math.Round(value * Factor);
+
+        // Skalirani font za dijaloge (font cijelog dijaloga; kontrole ga naslijede).
+        public static Font ScaledFont(float basePt, FontStyle style = FontStyle.Regular)
+            => new Font("Segoe UI", (float)(basePt * Factor), style);
+
         // Učita zapamćeni zoom iz postavki (dijeli settings.json s podacima o prozoru).
         public static void Load(string path = "settings.json")
         {
