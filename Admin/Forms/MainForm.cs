@@ -136,11 +136,11 @@ namespace SimpleWebDataAdmin.Forms
 			AddTab("Galerije & Slike", new GalleryView(_api));
 			AddTab("Objekti (Facilities)", new FacilitiesView(_api));
 			AddTab("Stranice web-a", new PagesView(_api));
-			AddTab("API Ključ", new ApiKeyView(_api));
 
 			// SUPER ADMIN MODULI
 			if (isSuperAdmin)
 			{
+				AddTab("API Ključ", new ApiKeyView(_api));
 				AddTab("[SA] Web Sites", new WebSitesView(_api));
 				AddTab("[SA] Korisnici", new UsersView(_api));
 			}

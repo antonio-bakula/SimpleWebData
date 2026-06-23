@@ -17,12 +17,15 @@ namespace SimpleWebData.Endpoints
             group.RequireAuthorization("UserAdminOnly");
 
             // --- API Keys ---
+            // Generiranje trajnog read-only ključa smije samo super admin.
+            // Endpoint je u "UserAdminOnly" grupi, ali ovdje dodatno tražimo "SuperUserOnly"
+            // (obje policy se kombiniraju - obični admin nema IsSuperUser=True pa dobije 403).
             group.MapPost("/apikey", ([FromBody] string[] domains, ClaimsPrincipal user, IConfiguration config) =>
             {
                 int webSiteId = int.Parse(user.Claims.First(c => c.Type == "WebSiteId").Value);
                 var token = TokenService.GenerateReadOnlyApiKey(webSiteId, domains, config);
                 return Results.Ok(new { ApiKey = token });
-            });
+            }).RequireAuthorization("SuperUserOnly");
 
             // --- PhotoGalleries ---
             group.MapGet("/photogalleries", async (AppDbContext db, ClaimsPrincipal user) =>
