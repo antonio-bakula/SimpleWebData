@@ -24,7 +24,7 @@ namespace SimpleWebDataAdmin.Views
 			var btnGenKey = new Button { Text = "Generiraj Trajni Read-Only API Token", AutoSize = true, MinimumSize = new Size(300, 45), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(5, 15, 5, 25) };
 			var txtResult = new TextBox { Width = 900, Height = 150, Multiline = true, ReadOnly = true, Font = new Font("Consolas", 10), Margin = new Padding(5) };
 
-			btnGenKey.Click += async (s, e) =>
+			btnGenKey.Click += OnClick(async () =>
 			{
 				var domains = txtDomains.Text.Split(',');
 				for (int i = 0; i < domains.Length; i++)
@@ -32,7 +32,7 @@ namespace SimpleWebDataAdmin.Views
 
 				var key = await Api.GenerateApiKeyAsync(domains);
 				txtResult.Text = key ?? "Greška kod spajanja na API!";
-			};
+			});
 
 			flow.Controls.Add(lblInfo);
 			flow.Controls.Add(txtDomains);

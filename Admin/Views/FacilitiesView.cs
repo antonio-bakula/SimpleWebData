@@ -113,7 +113,7 @@ namespace SimpleWebDataAdmin.Views
 					gridRes.Columns["Date"]!.ReadOnly = true;
 			}
 
-			btnLoad.Click += async (s, e) => await ReloadFacilitiesAsync();
+			btnLoad.Click += OnClick(() => ReloadFacilitiesAsync());
 
 			// Učitaj rezervacije prelaskom miša:
 			gridFac.SelectionChanged += async (s, e) =>
@@ -140,7 +140,7 @@ namespace SimpleWebDataAdmin.Views
 			};
 
 			// BRISANJE I DODAVANJE OBJEKATA
-			btnDelFac.Click += async (s, e) =>
+			btnDelFac.Click += OnClick(async () =>
 			{
 				if (gridFac.SelectedRows.Count > 0 && MessageBox.Show("Obrisati objekt?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -149,17 +149,17 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/admin/facilities/{f.Id}");
 					await ReloadFacilitiesAsync();
 				}
-			};
+			});
 
-			btnAddFac.Click += async (s, e) =>
+			btnAddFac.Click += OnClick(async () =>
 			{
 				var code = Dialogs.AskText("Novi Objekt", "Šifra Objekta (Code):", "novi-objekt");
 				if (code == null) return;
 				await Api.PostAsync<Facility>("/api/admin/facilities", new Facility { Code = code, Name = "Novi Objekt" });
 				await ReloadFacilitiesAsync();
-			};
+			});
 
-			btnDelDate.Click += async (s, e) =>
+			btnDelDate.Click += OnClick(async () =>
 			{
 				if (gridRes.SelectedRows.Count > 0 && MessageBox.Show("Obrisati zapis datuma?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -172,9 +172,9 @@ namespace SimpleWebDataAdmin.Views
 					if (f == null) return;
 					await ReloadReservationsAsync(f);
 				}
-			};
+			});
 
-			btnAddDates.Click += async (s, e) =>
+			btnAddDates.Click += OnClick(async () =>
 			{
 				var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 				if (f == null) return;
@@ -222,7 +222,7 @@ namespace SimpleWebDataAdmin.Views
 						await ReloadReservationsAsync(f);
 					}
 				}
-			};
+			});
 
 			Controls.Add(split);
 

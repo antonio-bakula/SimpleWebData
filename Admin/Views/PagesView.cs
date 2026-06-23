@@ -87,7 +87,7 @@ namespace SimpleWebDataAdmin.Views
 				btnAddText.Enabled = btnDelText.Enabled = true;
 			}
 
-			btnLoad.Click += async (s, e) => await ReloadPagesAsync();
+			btnLoad.Click += OnClick(() => ReloadPagesAsync());
 
 			// SELECTION CHANGED
 			gridPages.SelectionChanged += async (s, e) =>
@@ -114,7 +114,7 @@ namespace SimpleWebDataAdmin.Views
 			};
 
 			// BRISANJE I DODAVANJE STRANICA
-			btnDelPage.Click += async (s, e) =>
+			btnDelPage.Click += OnClick(async () =>
 			{
 				if (gridPages.SelectedRows.Count > 0 && MessageBox.Show("Obrisati stranicu?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -123,18 +123,18 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/admin/pages/{p.Id}");
 					await ReloadPagesAsync();
 				}
-			};
+			});
 
-			btnAddPage.Click += async (s, e) =>
+			btnAddPage.Click += OnClick(async () =>
 			{
 				var code = Dialogs.AskText("Nova Stranica", "Šifra Stranice (Code):", "nova-stranica");
 				if (code == null) return;
 				await Api.PostAsync<Page>("/api/admin/pages", new Page { Code = code });
 				await ReloadPagesAsync();
-			};
+			});
 
 			// BRISANJE I DODAVANJE TEKSTOVA
-			btnDelText.Click += async (s, e) =>
+			btnDelText.Click += OnClick(async () =>
 			{
 				if (gridTexts.SelectedRows.Count > 0 && MessageBox.Show("Obrisati tekst?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -146,9 +146,9 @@ namespace SimpleWebDataAdmin.Views
 					if (p == null) return;
 					await ReloadTextsAsync(p);
 				}
-			};
+			});
 
-			btnAddText.Click += async (s, e) =>
+			btnAddText.Click += OnClick(async () =>
 			{
 				var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 				if (p == null) return;
@@ -177,7 +177,7 @@ namespace SimpleWebDataAdmin.Views
 						await ReloadTextsAsync(p);
 					}
 				}
-			};
+			});
 
 			Controls.Add(split);
 

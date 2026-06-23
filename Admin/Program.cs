@@ -10,6 +10,12 @@ namespace SimpleWebDataAdmin
         {
             Application.SetHighDpiMode(HighDpiMode.SystemAware); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false); ApplicationConfiguration.Initialize();
 
+            // Globalna sigurnosna mreža: iznimke iz async void event handlera (Click, CellEndEdit, …)
+            // inače bi srušile aplikaciju. Ovdje ih hvatamo i prikažemo umjesto pada.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) =>
+                MessageBox.Show($"Došlo je do greške: {e.Exception.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
             using var loginForm = new Forms.LoginForm();
             if (loginForm.ShowDialog() == DialogResult.OK)
             {

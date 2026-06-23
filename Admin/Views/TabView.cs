@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -20,6 +21,29 @@ namespace SimpleWebDataAdmin.Views
 
 		// Default je no-op (npr. ApiKey tab nema što učitavati na prikazu).
 		public virtual Task LoadAsync() => Task.CompletedTask;
+
+		// Sigurno izvođenje async akcije gumba: privremeno onemogući gumb (sprječava dvoklik /
+		// re-entrancy dok poziv traje) i uhvati iznimku umjesto da sruši aplikaciju.
+		protected static EventHandler OnClick(Func<Task> action) => async (sender, e) =>
+		{
+			var control = sender as Control;
+			try
+			{
+				if (control != null) control.Enabled = false;
+				await action();
+			}
+			catch (Exception ex)
+			{
+				ShowError(ex);
+			}
+			finally
+			{
+				if (control != null) control.Enabled = true;
+			}
+		};
+
+		protected static void ShowError(Exception ex) =>
+			MessageBox.Show($"Došlo je do greške: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
 		// Standardni grid kakav koriste svi tabovi (inplace edit, full-row select, popunjava širinu).
 		protected static DataGridView MakeGrid() => new()

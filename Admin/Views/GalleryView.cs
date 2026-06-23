@@ -154,7 +154,7 @@ namespace SimpleWebDataAdmin.Views
 				ShowPhotos(selected ?? currentGalleries[0]);
 			}
 
-			btnLoad.Click += async (s, e) => await ReloadGalleriesAsync();
+			btnLoad.Click += OnClick(() => ReloadGalleriesAsync());
 
 			gridGalleries.SelectionChanged += (s, e) =>
 			{
@@ -173,7 +173,7 @@ namespace SimpleWebDataAdmin.Views
 				}
 			};
 
-			btnAddGal.Click += async (s, e) =>
+			btnAddGal.Click += OnClick(async () =>
 			{
 				var newGal = new PhotoGallery { Code = "new-code", Name = "Nova Galerija" };
 				var res = await Api.PostAsync<PhotoGallery>("/api/admin/photogalleries", newGal);
@@ -181,9 +181,9 @@ namespace SimpleWebDataAdmin.Views
 					await ReloadGalleriesAsync(res.Id);
 				else
 					MessageBox.Show("Dodavanje galerije nije uspjelo.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			};
+			});
 
-			btnDelGal.Click += async (s, e) =>
+			btnDelGal.Click += OnClick(async () =>
 			{
 				if (gridGalleries.SelectedRows.Count == 0)
 					return;
@@ -194,7 +194,7 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
 					await ReloadGalleriesAsync();
 				}
-			};
+			});
 
 			// INPLACE EDIT GALERIJA
 			gridGalleries.CellValueChanged += async (s, e) =>
@@ -208,7 +208,7 @@ namespace SimpleWebDataAdmin.Views
 			};
 
 			// -- AKCIJE SLIKE -- //
-			btnUpload.Click += async (s, e) =>
+			btnUpload.Click += OnClick(async () =>
 			{
 				if (gridGalleries.SelectedRows.Count == 0)
 					return;
@@ -225,9 +225,9 @@ namespace SimpleWebDataAdmin.Views
 					else
 						MessageBox.Show("Upload slike nije uspio.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
-			};
+			});
 
-			btnChangeImg.Click += async (s, e) =>
+			btnChangeImg.Click += OnClick(async () =>
 			{
 				if (gridPhotos.SelectedRows.Count == 0)
 					return;
@@ -243,9 +243,9 @@ namespace SimpleWebDataAdmin.Views
 					else
 						MessageBox.Show("Izmjena slike nije uspjela.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
-			};
+			});
 
-			btnDelImg.Click += async (s, e) =>
+			btnDelImg.Click += OnClick(async () =>
 			{
 				if (gridPhotos.SelectedRows.Count == 0)
 					return;
@@ -257,7 +257,7 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/admin/photos/{p.Id}");
 					await ReloadGalleriesAsync(galleryId);
 				}
-			};
+			});
 
 			// INPLACE EDIT SLIKE
 			gridPhotos.CellValueChanged += async (s, e) =>

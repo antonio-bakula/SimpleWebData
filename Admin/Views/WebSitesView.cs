@@ -37,7 +37,7 @@ namespace SimpleWebDataAdmin.Views
 				grid.DataSource = ToBindingList(sites);
 			}
 
-			btnLoad.Click += async (s, e) => await ReloadSitesAsync();
+			btnLoad.Click += OnClick(() => ReloadSitesAsync());
 
 			grid.CellEndEdit += async (s, e) =>
 			{
@@ -46,15 +46,15 @@ namespace SimpleWebDataAdmin.Views
 				await Api.PutAsync($"/api/superadmin/websites/{w.Id}", w);
 			};
 
-			btnAddSite.Click += async (s, e) =>
+			btnAddSite.Click += OnClick(async () =>
 			{
 				var code = Dialogs.AskText("Novi Web Site", "Šifra (Code):", "novi-site");
 				if (code == null) return;
 				await Api.PostAsync<WebSite>("/api/superadmin/websites", new WebSite { Code = code, Description = "Novi Web Site" });
 				await ReloadSitesAsync();
-			};
+			});
 
-			btnDelSite.Click += async (s, e) =>
+			btnDelSite.Click += OnClick(async () =>
 			{
 				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabrani Web Site?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -63,7 +63,7 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/superadmin/websites/{w.Id}");
 					await ReloadSitesAsync();
 				}
-			};
+			});
 
 			Controls.Add(grid);
 			Controls.Add(flowTop);

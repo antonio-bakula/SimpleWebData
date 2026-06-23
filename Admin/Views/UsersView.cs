@@ -49,7 +49,7 @@ namespace SimpleWebDataAdmin.Views
 				grid.DataSource = ToBindingList(users);
 			}
 
-			btnLoad.Click += async (s, e) => await ReloadUsersAsync();
+			btnLoad.Click += OnClick(() => ReloadUsersAsync());
 
 			grid.CellEndEdit += async (s, e) =>
 			{
@@ -58,7 +58,7 @@ namespace SimpleWebDataAdmin.Views
 				await Api.PutAsync($"/api/superadmin/users/{u.Id}", u);
 			};
 
-			btnAddUser.Click += async (s, e) =>
+			btnAddUser.Click += OnClick(async () =>
 			{
 				var sites = await Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
 				if (sites == null || sites.Count == 0)
@@ -102,9 +102,9 @@ namespace SimpleWebDataAdmin.Views
 						await ReloadUsersAsync();
 					}
 				}
-			};
+			});
 
-			btnDelUser.Click += async (s, e) =>
+			btnDelUser.Click += OnClick(async () =>
 			{
 				if (grid.SelectedRows.Count > 0 && MessageBox.Show("Obriši odabranog korisnika?", "Potvrda", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
@@ -113,7 +113,7 @@ namespace SimpleWebDataAdmin.Views
 					await Api.DeleteAsync($"/api/superadmin/users/{u.Id}");
 					await ReloadUsersAsync();
 				}
-			};
+			});
 
 			Controls.Add(grid);
 			Controls.Add(flowTop);
