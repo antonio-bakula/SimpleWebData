@@ -39,7 +39,7 @@ namespace SimpleWebDataAdmin.Forms
 			// donji rub se pomakne da je u cijelosti vidljiva (umjesto da bude odrezana).
 			this.AutoSize = true;
 			this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-			this.MinimumSize = new Size(Z(450), Z(410));
+			this.MinimumSize = new Size(Z(480), Z(410));
 			this.Padding = new Padding(0, 0, 0, Z(16));
 
 			var pnlTop = new Panel { Dock = DockStyle.Top, Height = Z(60), BackColor = Color.SteelBlue };
@@ -47,7 +47,7 @@ namespace SimpleWebDataAdmin.Forms
 			pnlTop.Controls.Add(lblTitle);
 
 			// Izbor jezika (oznaka je namjerno dvojezična da je uvijek jasna).
-			var lblLang = new Label { Text = "Jezik / Language:", Location = new Point(Z(30), Z(82)), AutoSize = true };
+			var lblLang = new Label { Text = "Language:", Location = new Point(Z(30), Z(82)), AutoSize = true };
 			cmbLang = new ComboBox { Location = new Point(Z(185), Z(78)), Width = Z(235), DropDownStyle = ComboBoxStyle.DropDownList };
 			cmbLang.Items.AddRange(new object[] { "Hrvatski", "English" });
 			cmbLang.SelectedIndex = Loc.Language == "en" ? 1 : 0;
