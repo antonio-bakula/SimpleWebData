@@ -21,8 +21,9 @@ namespace SimpleWebDataAdmin.Forms
 	public class MainForm : Form
 	{
 		private TabControl mainTabControl = null!;
-		// Pamtimo reference gumbiju za učitavanje kako bi ih pozvali kod starta
-		private List<Button> loadButtons = new();
+		// Lazy lifecycle: svaki tab nosi svoj loader u TabPage.Tag (Func<Task>) i učita se
+		// prvi put kad postane vidljiv. activatedTabs pamti koji su tabovi već učitani.
+		private readonly HashSet<TabPage> activatedTabs = new();
 
 		public MainForm()
 		{
@@ -67,12 +68,32 @@ namespace SimpleWebDataAdmin.Forms
 			catch { /* Utišano */ }
 		}
 
-		protected override void OnShown(EventArgs e)
+		protected override async void OnShown(EventArgs e)
 		{
 			base.OnShown(e);
-			// Okida učitavanje po inicijalnom prikazu MainForme za sve tabove koji su loadani (ovo se može ograničiti na SelectedTab da ne spama)
-			foreach (var btn in loadButtons)
-				btn.PerformClick();
+			// Učitavamo samo trenutno odabrani tab; ostali se učitavaju lijeno kad se prvi put otvore.
+			await ActivateAsync(mainTabControl.SelectedTab);
+		}
+
+		// Lijeno aktivira (učitava) tab i to samo prvi put. TabPage.Tag sadrži loader (Func<Task>).
+		// Zamjena za stari mehanizam btnLoad.PerformClick() u OnShown/SelectedIndexChanged.
+		private async Task ActivateAsync(TabPage? tab)
+		{
+			if (tab == null || activatedTabs.Contains(tab))
+				return;
+			if (tab.Tag is not Func<Task> loader)
+				return;
+
+			activatedTabs.Add(tab);
+			try
+			{
+				await loader();
+			}
+			catch (Exception ex)
+			{
+				activatedTabs.Remove(tab); // dopusti ponovni pokušaj kod sljedećeg prikaza taba
+				MessageBox.Show($"Greška kod učitavanja taba: {ex.Message}", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 
 		protected override void OnFormClosing(FormClosingEventArgs e)
@@ -126,14 +147,10 @@ namespace SimpleWebDataAdmin.Forms
 				mainTabControl.TabPages.Add(CreateUsersTab());
 			}
 
-			// Automatski trigger kad korisnik prebaci na neki tab 
-			mainTabControl.SelectedIndexChanged += (s, e) =>
-			{
-				if (mainTabControl.SelectedTab?.Tag is Button btnLoad)
-				{
-					btnLoad.PerformClick();
-				}
-			};
+			// Lijeno učitavanje pri prvom prelasku na tab. Kasniji prelasci ne re-fetchaju
+			// (za osvježavanje služi gumb "Osvježi" u svakom tabu).
+			mainTabControl.SelectedIndexChanged += async (s, e) =>
+				await ActivateAsync(mainTabControl.SelectedTab);
 		}
 
 		private TabPage CreateWebSitesTab()
@@ -160,11 +177,13 @@ namespace SimpleWebDataAdmin.Forms
 			};
 			HideTechnicalColumns(grid);
 
-			btnLoad.Click += async (s, e) =>
+			async Task ReloadSitesAsync()
 			{
 				var sites = await AppState.Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
 				grid.DataSource = new System.ComponentModel.BindingList<WebSite>(sites ?? new List<WebSite>());
-			};
+			}
+
+			btnLoad.Click += async (s, e) => await ReloadSitesAsync();
 
 			grid.CellEndEdit += async (s, e) =>
 			{
@@ -189,7 +208,7 @@ namespace SimpleWebDataAdmin.Forms
 					{
 						var w = new WebSite { Code = txtCode.Text, Description = "Novi Web Site" };
 						await AppState.Api.PostAsync<WebSite>("/api/superadmin/websites", w);
-						btnLoad.PerformClick();
+						await ReloadSitesAsync();
 					}
 				}
 			};
@@ -201,15 +220,14 @@ namespace SimpleWebDataAdmin.Forms
 					var w = grid.SelectedRows[0].DataBoundItem as WebSite;
 					if (w == null) return;
 					await AppState.Api.DeleteAsync($"/api/superadmin/websites/{w.Id}");
-					btnLoad.PerformClick();
+					await ReloadSitesAsync();
 				}
 			};
 
 			tab.Controls.Add(grid);
 			tab.Controls.Add(flowTop);
 
-			loadButtons.Add(btnLoad);
-			tab.Tag = btnLoad;
+			tab.Tag = (Func<Task>)(() => ReloadSitesAsync());
 			return tab;
 		}
 
@@ -230,7 +248,7 @@ namespace SimpleWebDataAdmin.Forms
 			var grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
 			HideTechnicalColumns(grid);
 
-			btnLoad.Click += async (s, e) =>
+			async Task ReloadUsersAsync()
 			{
 				var users = await AppState.Api.GetAsync<List<User>>("/api/superadmin/users");
 				var sites = await AppState.Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
@@ -246,7 +264,9 @@ namespace SimpleWebDataAdmin.Forms
 				}
 
 				grid.DataSource = new System.ComponentModel.BindingList<User>(users ?? new List<User>());
-			};
+			}
+
+			btnLoad.Click += async (s, e) => await ReloadUsersAsync();
 
 			grid.CellEndEdit += async (s, e) =>
 			{
@@ -296,7 +316,7 @@ namespace SimpleWebDataAdmin.Forms
 							IsSuperUser = chkSuper.Checked
 						};
 						await AppState.Api.PostAsync<object>("/api/superadmin/users", payload);
-						btnLoad.PerformClick();
+						await ReloadUsersAsync();
 					}
 				}
 			};
@@ -308,15 +328,14 @@ namespace SimpleWebDataAdmin.Forms
 					var u = grid.SelectedRows[0].DataBoundItem as User;
 					if (u == null) return;
 					await AppState.Api.DeleteAsync($"/api/superadmin/users/{u.Id}");
-					btnLoad.PerformClick();
+					await ReloadUsersAsync();
 				}
 			};
 
 			tab.Controls.Add(grid);
 			tab.Controls.Add(flowTop);
 
-			loadButtons.Add(btnLoad);
-			tab.Tag = btnLoad;
+			tab.Tag = (Func<Task>)(() => ReloadUsersAsync());
 
 			return tab;
 		}
@@ -383,7 +402,7 @@ namespace SimpleWebDataAdmin.Forms
 			split.Panel2.Controls.Add(gRight);
 
 			// LOADER
-			btnLoad.Click += async (s, e) =>
+			async Task ReloadPagesAsync()
 			{
 				var pages = await AppState.Api.GetAsync<List<Page>>("/api/admin/pages");
 				var gals = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
@@ -399,26 +418,32 @@ namespace SimpleWebDataAdmin.Forms
 				}
 
 				gridPages.DataSource = new System.ComponentModel.BindingList<Page>(pages ?? new List<Page>());
-			};
+			}
+
+			// Učitavanje tekstova odabrane stranice (ili reset ako stranica nije odabrana).
+			// Izdvojeno da se može pozvati nakon dodavanja/brisanja teksta, ne samo iz SelectionChanged.
+			async Task ReloadTextsAsync(Page? page)
+			{
+				if (page == null)
+				{
+					gridTexts.DataSource = null;
+					btnAddText.Enabled = btnDelText.Enabled = false;
+					return;
+				}
+				var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{page.Id}/texts");
+				gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
+				btnAddText.Enabled = btnDelText.Enabled = true;
+			}
+
+			btnLoad.Click += async (s, e) => await ReloadPagesAsync();
 
 			// SELECTION CHANGED
 			gridPages.SelectionChanged += async (s, e) =>
 			{
-				if (gridPages.SelectedRows.Count > 0 && gridPages.DataSource != null)
-				{
-					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
-					if (p != null)
-					{
-						var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{p.Id}/texts");
-						gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
-						btnAddText.Enabled = btnDelText.Enabled = true;
-					}
-				}
-				else
-				{
-					gridTexts.DataSource = null;
-					btnAddText.Enabled = btnDelText.Enabled = false;
-				}
+				var p = (gridPages.SelectedRows.Count > 0 && gridPages.DataSource != null)
+					? gridPages.SelectedRows[0].DataBoundItem as Page
+					: null;
+				await ReloadTextsAsync(p);
 			};
 
 			// IN-PLACE EDIT
@@ -444,7 +469,7 @@ namespace SimpleWebDataAdmin.Forms
 					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 					if (p == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/pages/{p.Id}");
-					btnLoad.PerformClick();
+					await ReloadPagesAsync();
 				}
 			};
 
@@ -464,7 +489,7 @@ namespace SimpleWebDataAdmin.Forms
 					{
 						var p = new Page { Code = txtCode.Text };
 						await AppState.Api.PostAsync<Page>("/api/admin/pages", p);
-						btnLoad.PerformClick();
+						await ReloadPagesAsync();
 					}
 				}
 			};
@@ -480,8 +505,7 @@ namespace SimpleWebDataAdmin.Forms
 
 					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 					if (p == null) return;
-					var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{p.Id}/texts");
-					gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
+					await ReloadTextsAsync(p);
 				}
 			};
 
@@ -511,15 +535,13 @@ namespace SimpleWebDataAdmin.Forms
 						var t = new PageText { Code = txtCode.Text, Content = txtContent.Text };
 						await AppState.Api.PostAsync<PageText>($"/api/admin/pages/{p.Id}/texts", t);
 
-						var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{p.Id}/texts");
-						gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
+						await ReloadTextsAsync(p);
 					}
 				}
 			};
 
 			tab.Controls.Add(split);
-			loadButtons.Add(btnLoad);
-			tab.Tag = btnLoad;
+			tab.Tag = (Func<Task>)(() => ReloadPagesAsync());
 			return tab;
 		}
 
@@ -579,7 +601,7 @@ namespace SimpleWebDataAdmin.Forms
 			};
 
 			// LOADER
-			btnLoad.Click += async (s, e) =>
+			async Task ReloadFacilitiesAsync()
 			{
 				var facs = await AppState.Api.GetAsync<List<Facility>>("/api/admin/facilities");
 				var gals = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
@@ -595,36 +617,42 @@ namespace SimpleWebDataAdmin.Forms
 				}
 
 				gridFac.DataSource = new System.ComponentModel.BindingList<Facility>(facs ?? new List<Facility>());
-			};
+			}
+
+			// Učitavanje rezervacija/zauzetosti odabranog objekta (ili reset ako objekt nije odabran).
+			// Izdvojeno da se može pozvati nakon dodavanja/brisanja datuma, ne samo iz SelectionChanged.
+			async Task ReloadReservationsAsync(Facility? f)
+			{
+				if (f == null)
+				{
+					gridRes.DataSource = null;
+					btnAddDates.Enabled = btnDelDate.Enabled = false;
+					return;
+				}
+				var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
+
+				if (!gridRes.Columns.Contains("StatusCombo"))
+				{
+					var comboStatus = new DataGridViewComboBoxColumn { Name = "StatusCombo", HeaderText = "Status", DataPropertyName = "Status", DataSource = Enum.GetValues(typeof(ReservationStatus)) };
+					gridRes.Columns.Add(comboStatus);
+				}
+				gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
+				btnAddDates.Enabled = btnDelDate.Enabled = true;
+
+				// Onemogući edit na samom datumu, korisnik uređuje samo Status ili dodaje/briše datume
+				if (gridRes.Columns["Date"] != null)
+					gridRes.Columns["Date"]!.ReadOnly = true;
+			}
+
+			btnLoad.Click += async (s, e) => await ReloadFacilitiesAsync();
 
 			// Učitaj rezervacije prelaskom miša:
 			gridFac.SelectionChanged += async (s, e) =>
 			{
-				if (gridFac.SelectedRows.Count > 0 && gridFac.DataSource != null)
-				{
-					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
-					if (f != null)
-					{
-						var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
-
-						if (!gridRes.Columns.Contains("StatusCombo"))
-						{
-							var comboStatus = new DataGridViewComboBoxColumn { Name = "StatusCombo", HeaderText = "Status", DataPropertyName = "Status", DataSource = Enum.GetValues(typeof(ReservationStatus)) };
-							gridRes.Columns.Add(comboStatus);
-						}
-						gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
-						btnAddDates.Enabled = btnDelDate.Enabled = true;
-
-						// Onemogući edit na samom datumu, korisnik uređuje samo Status ili dodaje/briše datume
-						if (gridRes.Columns["Date"] != null)
-							gridRes.Columns["Date"]!.ReadOnly = true;
-					}
-				}
-				else
-				{
-					gridRes.DataSource = null;
-					btnAddDates.Enabled = btnDelDate.Enabled = false;
-				}
+				var f = (gridFac.SelectedRows.Count > 0 && gridFac.DataSource != null)
+					? gridFac.SelectedRows[0].DataBoundItem as Facility
+					: null;
+				await ReloadReservationsAsync(f);
 			};
 
 			// IZMJENE (In-place edit)
@@ -650,7 +678,7 @@ namespace SimpleWebDataAdmin.Forms
 					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 					if (f == null) return;
 					await AppState.Api.DeleteAsync($"/api/admin/facilities/{f.Id}");
-					btnLoad.PerformClick();
+					await ReloadFacilitiesAsync();
 				}
 			};
 
@@ -670,7 +698,7 @@ namespace SimpleWebDataAdmin.Forms
 					{
 						var f = new Facility { Code = txtCode.Text, Name = "Novi Objekt" };
 						await AppState.Api.PostAsync<Facility>("/api/admin/facilities", f);
-						btnLoad.PerformClick();
+						await ReloadFacilitiesAsync();
 					}
 				}
 			};
@@ -686,8 +714,7 @@ namespace SimpleWebDataAdmin.Forms
 					// Osvježi grid rezervacija
 					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 					if (f == null) return;
-					var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
-					gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
+					await ReloadReservationsAsync(f);
 				}
 			};
 
@@ -727,7 +754,7 @@ namespace SimpleWebDataAdmin.Forms
 						var status = (ReservationStatus)cmbStatus.SelectedItem!;
 
 						// Disable dugme za vrijeme dodavanja
-						btnAddDates.Enabled = btnAddDates.Enabled = false;
+						btnAddDates.Enabled = false;
 
 						for (var d = start; d <= end; d = d.AddDays(1))
 						{
@@ -735,18 +762,14 @@ namespace SimpleWebDataAdmin.Forms
 							await AppState.Api.PostAsync<Reservation>($"/api/admin/facilities/{f.Id}/reservations", r);
 						}
 
-						btnAddDates.Enabled = btnAddDates.Enabled = true;
-
-						// Osvježi
-						var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
-						gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
+						// Osvježi (ReloadReservationsAsync ponovno omogućuje gumbe)
+						await ReloadReservationsAsync(f);
 					}
 				}
 			};
 
 			tab.Controls.Add(split);
-			loadButtons.Add(btnLoad);
-			tab.Tag = btnLoad;
+			tab.Tag = (Func<Task>)(() => ReloadFacilitiesAsync());
 			return tab;
 		}
 
@@ -831,35 +854,67 @@ namespace SimpleWebDataAdmin.Forms
 			// -- AKCIJE GALERIJE -- //
 			BindingList<PhotoGallery>? currentGalleries = null;
 
-			btnLoad.Click += async (s, e) =>
+			// Prikaz slika odabrane galerije (ili reset ako galerija nije odabrana).
+			// Izdvojeno da se može pozvati i nakon uploada/izmjene/brisanja, ne samo iz SelectionChanged.
+			void ShowPhotos(PhotoGallery? gallery)
 			{
-				var data = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
-				if (data != null)
-				{
-					currentGalleries = new BindingList<PhotoGallery>(data);
-					gridGalleries.DataSource = currentGalleries;
-				}
-				// Ako nema galerija, resetiramo prikaz slika
-				if (gridGalleries.SelectedRows.Count == 0 || gridGalleries.DataSource == null)
+				if (gallery == null)
 				{
 					gridPhotos.DataSource = null;
 					picPreview.CancelAsync();
 					picPreview.ImageLocation = null;
 					btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = false;
+					return;
 				}
-				else
+				gridPhotos.DataSource = new BindingList<Photo>(gallery.Photos);
+				btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = true;
+			}
+
+			int? SelectedGalleryId() =>
+				(gridGalleries.SelectedRows.Count > 0
+					? gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery
+					: null)?.Id;
+
+			void SelectGalleryById(int id)
+			{
+				foreach (DataGridViewRow row in gridGalleries.Rows)
 				{
-					// Ako se uspješno napunilo i prva je odmah odabrana (što WinForms obično automatski napravi)
-					var gallery = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
-					if (gallery != null && gallery.Photos != null)
+					if (row.DataBoundItem is PhotoGallery g && g.Id == id)
 					{
-						gridPhotos.DataSource = new BindingList<Photo>(gallery.Photos);
-						btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = true;
+						gridGalleries.ClearSelection();
+						row.Selected = true;
+						return;
 					}
 				}
-			};
-			loadButtons.Add(btnLoad);
-			tab.Tag = btnLoad;
+			}
+
+			// Centralno učitavanje galerija. Zamjenjuje btnLoad.PerformClick() kao mehanizam osvježavanja.
+			// selectGalleryId: ako je zadan, nakon reloada ostajemo na toj galeriji (npr. nakon uploada slike).
+			async Task ReloadGalleriesAsync(int? selectGalleryId = null)
+			{
+				var data = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
+				currentGalleries = new BindingList<PhotoGallery>(data ?? new List<PhotoGallery>());
+				gridGalleries.DataSource = currentGalleries;
+
+				if (currentGalleries.Count == 0)
+				{
+					ShowPhotos(null);
+					return;
+				}
+
+				if (selectGalleryId != null)
+					SelectGalleryById(selectGalleryId.Value);
+
+				// Eksplicitno osvježi prikaz slika za trenutno odabranu galeriju.
+				// Ne oslanjamo se samo na SelectionChanged zbog WinForms timinga kod (re)bindanja.
+				var selected = gridGalleries.SelectedRows.Count > 0
+					? gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery
+					: null;
+				ShowPhotos(selected ?? currentGalleries[0]);
+			}
+
+			btnLoad.Click += async (s, e) => await ReloadGalleriesAsync();
+			tab.Tag = (Func<Task>)(() => ReloadGalleriesAsync());
 
 			gridGalleries.SelectionChanged += (s, e) =>
 			{
@@ -867,16 +922,14 @@ namespace SimpleWebDataAdmin.Forms
 				if (gridGalleries.SelectedRows.Count > 0)
 				{
 					var gallery = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
-					// Prekidamo ako je to "nova" row od strane Grida
+					// Prekidamo ako je to tranzijentni null tijekom (re)bindanja grida
 					if (gallery == null)
 						return;
-					gridPhotos.DataSource = new BindingList<Photo>(gallery.Photos);
-					btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = true;
+					ShowPhotos(gallery);
 				}
 				else
 				{
-					gridPhotos.DataSource = null;
-					btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = false;
+					ShowPhotos(null);
 				}
 			};
 
@@ -885,7 +938,9 @@ namespace SimpleWebDataAdmin.Forms
 				var newGal = new PhotoGallery { Code = "new-code", Name = "Nova Galerija" };
 				var res = await AppState.Api.PostAsync<PhotoGallery>("/api/admin/photogalleries", newGal);
 				if (res != null)
-				{ btnLoad.PerformClick(); }
+					await ReloadGalleriesAsync(res.Id);
+				else
+					MessageBox.Show("Dodavanje galerije nije uspjelo.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			};
 
 			btnDelGal.Click += async (s, e) =>
@@ -897,7 +952,7 @@ namespace SimpleWebDataAdmin.Forms
 				if (MessageBox.Show("Obriši?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await AppState.Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
-					btnLoad.PerformClick();
+					await ReloadGalleriesAsync();
 				}
 			};
 
@@ -926,9 +981,9 @@ namespace SimpleWebDataAdmin.Forms
 				{
 					bool success = await AppState.Api.UploadPhotoAsync(galleryId, ofd.FileName, "Nova slika");
 					if (success)
-					{
-
-					}
+						await ReloadGalleriesAsync(galleryId);   // #6: osvježi grid i ostani na istoj galeriji
+					else
+						MessageBox.Show("Upload slike nije uspio.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			};
 
@@ -938,13 +993,15 @@ namespace SimpleWebDataAdmin.Forms
 					return;
 				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
 				if (p == null) return;
+				var galleryId = SelectedGalleryId();
 				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
 					bool success = await AppState.Api.UpdatePhotoAsync(p.Id, ofd.FileName, p.AltText);
 					if (success)
-					{ 
-					}
+						await ReloadGalleriesAsync(galleryId);   // osvježi prikaz nove slike
+					else
+						MessageBox.Show("Izmjena slike nije uspjela.", "Greška", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			};
 
@@ -954,10 +1011,11 @@ namespace SimpleWebDataAdmin.Forms
 					return;
 				var p = gridPhotos.SelectedRows[0].DataBoundItem as Photo;
 				if (p == null) return;
+				var galleryId = SelectedGalleryId();
 				if (MessageBox.Show("Obriši sliku?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
 					await AppState.Api.DeleteAsync($"/api/admin/photos/{p.Id}");
-					btnLoad.PerformClick();
+					await ReloadGalleriesAsync(galleryId);
 				}
 			};
 
