@@ -13,7 +13,7 @@ namespace SimpleWebDataAdmin
             using var loginForm = new Forms.LoginForm();
             if (loginForm.ShowDialog() == DialogResult.OK)
             {
-                Application.Run(new Forms.MainForm());
+                Application.Run(new Forms.MainForm(AppState.Api));
             }
         }
     }

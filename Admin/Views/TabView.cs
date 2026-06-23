@@ -1,14 +1,39 @@
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SimpleWebDataAdmin.Services;
 
 namespace SimpleWebDataAdmin.Views
 {
-	// Bazna klasa za svaki tab-view. Svaki view sam gradi svoj UI u konstruktoru,
-	// a MainForm ga lijeno učitava preko LoadAsync() (zamjena za stari btnLoad.PerformClick()).
+	// Bazna klasa za svaki tab-view. Drži injektani ApiClient i dijeljene UI helpere.
+	// MainForm lijeno učitava view preko LoadAsync() (zamjena za stari btnLoad.PerformClick()).
 	public abstract class TabView : UserControl
 	{
-		// Default je no-op (npr. ApiKey tab nema što učitavati).
+		protected ApiClient Api { get; }
+
+		protected TabView(ApiClient api)
+		{
+			Api = api;
+		}
+
+		// Default je no-op (npr. ApiKey tab nema što učitavati na prikazu).
 		public virtual Task LoadAsync() => Task.CompletedTask;
+
+		// Standardni grid kakav koriste svi tabovi (inplace edit, full-row select, popunjava širinu).
+		protected static DataGridView MakeGrid() => new()
+		{
+			Dock = DockStyle.Fill,
+			ReadOnly = false,
+			SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+			AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+			AllowUserToAddRows = false,
+			BackgroundColor = Color.WhiteSmoke
+		};
+
+		// Wrappa listu (ili praznu listu ako je null) u BindingList za dvosmjerni binding grida.
+		protected static BindingList<T> ToBindingList<T>(List<T>? items) => new(items ?? new List<T>());
 
 		// Sakriva tehničke (FK/Id) stupce kad se grid napuni. Dijeljeno između svih viewova.
 		protected static void HideTechnicalColumns(DataGridView grid)

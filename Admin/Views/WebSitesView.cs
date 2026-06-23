@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -15,7 +15,7 @@ namespace SimpleWebDataAdmin.Views
 	{
 		private readonly Func<Task> _load;
 
-		public WebSitesView()
+		public WebSitesView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -28,20 +28,13 @@ namespace SimpleWebDataAdmin.Views
 			flowTop.Controls.Add(btnAddSite);
 			flowTop.Controls.Add(btnDelSite);
 
-			var grid = new DataGridView {
-				Dock = DockStyle.Fill,
-				ReadOnly = false,
-				SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-				AllowUserToAddRows = false,
-				BackgroundColor = Color.WhiteSmoke
-			};
+			var grid = MakeGrid();
 			HideTechnicalColumns(grid);
 
 			async Task ReloadSitesAsync()
 			{
-				var sites = await AppState.Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
-				grid.DataSource = new System.ComponentModel.BindingList<WebSite>(sites ?? new List<WebSite>());
+				var sites = await Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
+				grid.DataSource = ToBindingList(sites);
 			}
 
 			btnLoad.Click += async (s, e) => await ReloadSitesAsync();
@@ -50,28 +43,15 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var w = grid.Rows[e.RowIndex].DataBoundItem as WebSite;
 				if (w == null) return;
-				await AppState.Api.PutAsync($"/api/superadmin/websites/{w.Id}", w);
+				await Api.PutAsync($"/api/superadmin/websites/{w.Id}", w);
 			};
 
 			btnAddSite.Click += async (s, e) =>
 			{
-				using (var modal = new Form { ClientSize = new Size(300, 140), Text = "Novi Web Site", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
-				{
-					var lbl = new Label { Text = "Šifra (Code):", Location = new Point(20, 15), AutoSize = true };
-					var txtCode = new TextBox { Location = new Point(20, 40), Width = 260, Text = "novi-site" };
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 85), Width = 100, Height = 30, DialogResult = DialogResult.OK };
-					modal.Controls.Add(lbl);
-					modal.Controls.Add(txtCode);
-					modal.Controls.Add(btnOk);
-					modal.AcceptButton = btnOk;
-
-					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
-					{
-						var w = new WebSite { Code = txtCode.Text, Description = "Novi Web Site" };
-						await AppState.Api.PostAsync<WebSite>("/api/superadmin/websites", w);
-						await ReloadSitesAsync();
-					}
-				}
+				var code = Dialogs.AskText("Novi Web Site", "Šifra (Code):", "novi-site");
+				if (code == null) return;
+				await Api.PostAsync<WebSite>("/api/superadmin/websites", new WebSite { Code = code, Description = "Novi Web Site" });
+				await ReloadSitesAsync();
 			};
 
 			btnDelSite.Click += async (s, e) =>
@@ -80,7 +60,7 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var w = grid.SelectedRows[0].DataBoundItem as WebSite;
 					if (w == null) return;
-					await AppState.Api.DeleteAsync($"/api/superadmin/websites/{w.Id}");
+					await Api.DeleteAsync($"/api/superadmin/websites/{w.Id}");
 					await ReloadSitesAsync();
 				}
 			};

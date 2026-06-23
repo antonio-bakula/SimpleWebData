@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -15,7 +15,7 @@ namespace SimpleWebDataAdmin.Views
 	{
 		private readonly Func<Task> _load;
 
-		public UsersView()
+		public UsersView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -28,13 +28,13 @@ namespace SimpleWebDataAdmin.Views
 			flowTop.Controls.Add(btnAddUser);
 			flowTop.Controls.Add(btnDelUser);
 
-			var grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var grid = MakeGrid();
 			HideTechnicalColumns(grid);
 
 			async Task ReloadUsersAsync()
 			{
-				var users = await AppState.Api.GetAsync<List<User>>("/api/superadmin/users");
-				var sites = await AppState.Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
+				var users = await Api.GetAsync<List<User>>("/api/superadmin/users");
+				var sites = await Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
 
 				if (!grid.Columns.Contains("SiteCombo"))
 				{
@@ -46,7 +46,7 @@ namespace SimpleWebDataAdmin.Views
 					(grid.Columns["SiteCombo"] as DataGridViewComboBoxColumn)!.DataSource = sites;
 				}
 
-				grid.DataSource = new System.ComponentModel.BindingList<User>(users ?? new List<User>());
+				grid.DataSource = ToBindingList(users);
 			}
 
 			btnLoad.Click += async (s, e) => await ReloadUsersAsync();
@@ -55,12 +55,12 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var u = grid.Rows[e.RowIndex].DataBoundItem as User;
 				if (u == null) return;
-				await AppState.Api.PutAsync($"/api/superadmin/users/{u.Id}", u);
+				await Api.PutAsync($"/api/superadmin/users/{u.Id}", u);
 			};
 
 			btnAddUser.Click += async (s, e) =>
 			{
-				var sites = await AppState.Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
+				var sites = await Api.GetAsync<List<WebSite>>("/api/superadmin/websites");
 				if (sites == null || sites.Count == 0)
 				{ MessageBox.Show("Nema kreiranih Web Site-ova!"); return; }
 
@@ -98,7 +98,7 @@ namespace SimpleWebDataAdmin.Views
 							WebSiteId = (int)cmbSite.SelectedValue!,
 							IsSuperUser = chkSuper.Checked
 						};
-						await AppState.Api.PostAsync<object>("/api/superadmin/users", payload);
+						await Api.PostAsync<object>("/api/superadmin/users", payload);
 						await ReloadUsersAsync();
 					}
 				}
@@ -110,7 +110,7 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var u = grid.SelectedRows[0].DataBoundItem as User;
 					if (u == null) return;
-					await AppState.Api.DeleteAsync($"/api/superadmin/users/{u.Id}");
+					await Api.DeleteAsync($"/api/superadmin/users/{u.Id}");
 					await ReloadUsersAsync();
 				}
 			};

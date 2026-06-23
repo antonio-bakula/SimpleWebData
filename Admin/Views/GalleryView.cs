@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -15,7 +15,7 @@ namespace SimpleWebDataAdmin.Views
 	{
 		private readonly Func<Task> _load;
 
-		public GalleryView()
+		public GalleryView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -35,7 +35,7 @@ namespace SimpleWebDataAdmin.Views
 			flowTop.Controls.Add(btnDelGal);
 
 			// Bitno: Isključujemo ReadOnly da dozvolimo inplace edit za Code, Name, Description (Id skrivamo)
-			var gridGalleries = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridGalleries = MakeGrid();
 			HideTechnicalColumns(gridGalleries);
 			gTop.Controls.Add(gridGalleries);
 			gTop.Controls.Add(flowTop);
@@ -54,7 +54,7 @@ namespace SimpleWebDataAdmin.Views
 			splitBot.Resize += (s, e) => { splitBot.SplitterDistance = (int)(splitBot.Width * 0.66); };
 
 			// Dozvoli inplace edit AltText/itd.
-			var gridPhotos = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridPhotos = MakeGrid();
 			HideTechnicalColumns(gridPhotos);
 			// I FileName je ReadOnly interno (samo sa ChangeImg)
 			gridPhotos.CellBeginEdit += (s, e) => { if (gridPhotos.Columns[e.ColumnIndex].Name == "FileName") e.Cancel = true; };
@@ -81,7 +81,7 @@ namespace SimpleWebDataAdmin.Views
 					var g = gridGalleries.SelectedRows[0].DataBoundItem as PhotoGallery;
 					if (p != null && g != null)
 					{
-						var baseUrl = AppState.Api.BaseUrl.TrimEnd('/');
+						var baseUrl = Api.BaseUrl.TrimEnd('/');
 						picPreview.ImageLocation = $"{baseUrl}/api/read/images/{g.Code}/{p.FileName}";
 					}
 				}
@@ -107,7 +107,7 @@ namespace SimpleWebDataAdmin.Views
 					btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = false;
 					return;
 				}
-				gridPhotos.DataSource = new BindingList<Photo>(gallery.Photos);
+				gridPhotos.DataSource = ToBindingList(gallery.Photos);
 				btnUpload.Enabled = btnChangeImg.Enabled = btnDelImg.Enabled = true;
 			}
 
@@ -133,8 +133,8 @@ namespace SimpleWebDataAdmin.Views
 			// selectGalleryId: ako je zadan, nakon reloada ostajemo na toj galeriji (npr. nakon uploada slike).
 			async Task ReloadGalleriesAsync(int? selectGalleryId = null)
 			{
-				var data = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
-				currentGalleries = new BindingList<PhotoGallery>(data ?? new List<PhotoGallery>());
+				var data = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
+				currentGalleries = ToBindingList(data);
 				gridGalleries.DataSource = currentGalleries;
 
 				if (currentGalleries.Count == 0)
@@ -176,7 +176,7 @@ namespace SimpleWebDataAdmin.Views
 			btnAddGal.Click += async (s, e) =>
 			{
 				var newGal = new PhotoGallery { Code = "new-code", Name = "Nova Galerija" };
-				var res = await AppState.Api.PostAsync<PhotoGallery>("/api/admin/photogalleries", newGal);
+				var res = await Api.PostAsync<PhotoGallery>("/api/admin/photogalleries", newGal);
 				if (res != null)
 					await ReloadGalleriesAsync(res.Id);
 				else
@@ -191,7 +191,7 @@ namespace SimpleWebDataAdmin.Views
 				if (g == null) return;
 				if (MessageBox.Show("Obriši?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					await AppState.Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
+					await Api.DeleteAsync($"/api/admin/photogalleries/{g.Id}");
 					await ReloadGalleriesAsync();
 				}
 			};
@@ -203,7 +203,7 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var g = gridGalleries.Rows[e.RowIndex].DataBoundItem as PhotoGallery;
 					if (g == null) return;
-					await AppState.Api.PutAsync($"/api/admin/photogalleries/{g.Id}", g);
+					await Api.PutAsync($"/api/admin/photogalleries/{g.Id}", g);
 				}
 			};
 
@@ -219,7 +219,7 @@ namespace SimpleWebDataAdmin.Views
 				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
-					bool success = await AppState.Api.UploadPhotoAsync(galleryId, ofd.FileName, "Nova slika");
+					bool success = await Api.UploadPhotoAsync(galleryId, ofd.FileName, "Nova slika");
 					if (success)
 						await ReloadGalleriesAsync(galleryId);   // #6: osvježi grid i ostani na istoj galeriji
 					else
@@ -237,7 +237,7 @@ namespace SimpleWebDataAdmin.Views
 				using var ofd = new OpenFileDialog { Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg" };
 				if (ofd.ShowDialog() == DialogResult.OK)
 				{
-					bool success = await AppState.Api.UpdatePhotoAsync(p.Id, ofd.FileName, p.AltText);
+					bool success = await Api.UpdatePhotoAsync(p.Id, ofd.FileName, p.AltText);
 					if (success)
 						await ReloadGalleriesAsync(galleryId);   // osvježi prikaz nove slike
 					else
@@ -254,7 +254,7 @@ namespace SimpleWebDataAdmin.Views
 				var galleryId = SelectedGalleryId();
 				if (MessageBox.Show("Obriši sliku?", "Info", MessageBoxButtons.YesNo) == DialogResult.Yes)
 				{
-					await AppState.Api.DeleteAsync($"/api/admin/photos/{p.Id}");
+					await Api.DeleteAsync($"/api/admin/photos/{p.Id}");
 					await ReloadGalleriesAsync(galleryId);
 				}
 			};
@@ -267,7 +267,7 @@ namespace SimpleWebDataAdmin.Views
 					var p = gridPhotos.Rows[e.RowIndex].DataBoundItem as Photo;
 					if (p == null) return;
 					// Zovemo UpdatePhotoAsync s null putanjom da azurira samo AltText!
-					await AppState.Api.UpdatePhotoAsync(p.Id, null, p.AltText);
+					await Api.UpdatePhotoAsync(p.Id, null, p.AltText);
 				}
 			};
 

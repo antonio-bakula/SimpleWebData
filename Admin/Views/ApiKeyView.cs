@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -13,7 +13,7 @@ namespace SimpleWebDataAdmin.Views
 	// Tab za generiranje read-only API ključa. Nema učitavanja na prikazu (koristi default no-op LoadAsync).
 	public class ApiKeyView : TabView
 	{
-		public ApiKeyView()
+		public ApiKeyView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -30,7 +30,7 @@ namespace SimpleWebDataAdmin.Views
 				for (int i = 0; i < domains.Length; i++)
 					domains[i] = domains[i].Trim();
 
-				var key = await AppState.Api.GenerateApiKeyAsync(domains);
+				var key = await Api.GenerateApiKeyAsync(domains);
 				txtResult.Text = key ?? "Greška kod spajanja na API!";
 			};
 

@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -15,7 +15,7 @@ namespace SimpleWebDataAdmin.Views
 	{
 		private readonly Func<Task> _load;
 
-		public PagesView()
+		public PagesView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -32,7 +32,7 @@ namespace SimpleWebDataAdmin.Views
 			flowLeft.Controls.Add(btnAddPage);
 			flowLeft.Controls.Add(btnDelPage);
 
-			var gridPages = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridPages = MakeGrid();
 			HideTechnicalColumns(gridPages);
 			gLeft.Controls.Add(gridPages);
 			gLeft.Controls.Add(flowLeft);
@@ -45,7 +45,7 @@ namespace SimpleWebDataAdmin.Views
 			flowRight.Controls.Add(btnAddText);
 			flowRight.Controls.Add(btnDelText);
 
-			var gridTexts = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridTexts = MakeGrid();
 			HideTechnicalColumns(gridTexts);
 			gRight.Controls.Add(gridTexts);
 			gRight.Controls.Add(flowRight);
@@ -56,8 +56,8 @@ namespace SimpleWebDataAdmin.Views
 			// LOADER
 			async Task ReloadPagesAsync()
 			{
-				var pages = await AppState.Api.GetAsync<List<Page>>("/api/admin/pages");
-				var gals = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
+				var pages = await Api.GetAsync<List<Page>>("/api/admin/pages");
+				var gals = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
 
 				if (!gridPages.Columns.Contains("GalleryCombo"))
 				{
@@ -69,7 +69,7 @@ namespace SimpleWebDataAdmin.Views
 					(gridPages.Columns["GalleryCombo"] as DataGridViewComboBoxColumn)!.DataSource = gals;
 				}
 
-				gridPages.DataSource = new System.ComponentModel.BindingList<Page>(pages ?? new List<Page>());
+				gridPages.DataSource = ToBindingList(pages);
 			}
 
 			// Učitavanje tekstova odabrane stranice (ili reset ako stranica nije odabrana).
@@ -82,8 +82,8 @@ namespace SimpleWebDataAdmin.Views
 					btnAddText.Enabled = btnDelText.Enabled = false;
 					return;
 				}
-				var texts = await AppState.Api.GetAsync<List<PageText>>($"/api/admin/pages/{page.Id}/texts");
-				gridTexts.DataSource = new System.ComponentModel.BindingList<PageText>(texts ?? new List<PageText>());
+				var texts = await Api.GetAsync<List<PageText>>($"/api/admin/pages/{page.Id}/texts");
+				gridTexts.DataSource = ToBindingList(texts);
 				btnAddText.Enabled = btnDelText.Enabled = true;
 			}
 
@@ -103,14 +103,14 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var p = gridPages.Rows[e.RowIndex].DataBoundItem as Page;
 				if (p == null) return;
-				await AppState.Api.PutAsync($"/api/admin/pages/{p.Id}", p);
+				await Api.PutAsync($"/api/admin/pages/{p.Id}", p);
 			};
 
 			gridTexts.CellEndEdit += async (s, e) =>
 			{
 				var t = gridTexts.Rows[e.RowIndex].DataBoundItem as PageText;
 				if (t == null) return;
-				await AppState.Api.PutAsync($"/api/admin/pagetexts/{t.Id}", t);
+				await Api.PutAsync($"/api/admin/pagetexts/{t.Id}", t);
 			};
 
 			// BRISANJE I DODAVANJE STRANICA
@@ -120,30 +120,17 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 					if (p == null) return;
-					await AppState.Api.DeleteAsync($"/api/admin/pages/{p.Id}");
+					await Api.DeleteAsync($"/api/admin/pages/{p.Id}");
 					await ReloadPagesAsync();
 				}
 			};
 
 			btnAddPage.Click += async (s, e) =>
 			{
-				using (var modal = new Form { ClientSize = new Size(300, 140), Text = "Nova Stranica", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false })
-				{
-					var lbl = new Label { Text = "Šifra Stranice (Code):", Location = new Point(20, 15), AutoSize = true };
-					var txtCode = new TextBox { Location = new Point(20, 40), Width = 260, Text = "nova-stranica" };
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 85), Width = 100, Height = 30, DialogResult = DialogResult.OK };
-					modal.Controls.Add(lbl);
-					modal.Controls.Add(txtCode);
-					modal.Controls.Add(btnOk);
-					modal.AcceptButton = btnOk;
-
-					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
-					{
-						var p = new Page { Code = txtCode.Text };
-						await AppState.Api.PostAsync<Page>("/api/admin/pages", p);
-						await ReloadPagesAsync();
-					}
-				}
+				var code = Dialogs.AskText("Nova Stranica", "Šifra Stranice (Code):", "nova-stranica");
+				if (code == null) return;
+				await Api.PostAsync<Page>("/api/admin/pages", new Page { Code = code });
+				await ReloadPagesAsync();
 			};
 
 			// BRISANJE I DODAVANJE TEKSTOVA
@@ -153,7 +140,7 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var t = gridTexts.SelectedRows[0].DataBoundItem as PageText;
 					if (t == null) return;
-					await AppState.Api.DeleteAsync($"/api/admin/pagetexts/{t.Id}");
+					await Api.DeleteAsync($"/api/admin/pagetexts/{t.Id}");
 
 					var p = gridPages.SelectedRows[0].DataBoundItem as Page;
 					if (p == null) return;
@@ -185,7 +172,7 @@ namespace SimpleWebDataAdmin.Views
 					if (modal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
 					{
 						var t = new PageText { Code = txtCode.Text, Content = txtContent.Text };
-						await AppState.Api.PostAsync<PageText>($"/api/admin/pages/{p.Id}/texts", t);
+						await Api.PostAsync<PageText>($"/api/admin/pages/{p.Id}/texts", t);
 
 						await ReloadTextsAsync(p);
 					}

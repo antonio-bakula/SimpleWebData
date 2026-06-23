@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SimpleWebDataAdmin;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Models;
 
 namespace SimpleWebDataAdmin.Views
@@ -15,7 +15,7 @@ namespace SimpleWebDataAdmin.Views
 	{
 		private readonly Func<Task> _load;
 
-		public FacilitiesView()
+		public FacilitiesView(ApiClient api) : base(api)
 		{
 			BackColor = Color.White;
 
@@ -32,7 +32,7 @@ namespace SimpleWebDataAdmin.Views
 			flowLeft.Controls.Add(btnAddFac);
 			flowLeft.Controls.Add(btnDelFac);
 
-			var gridFac = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridFac = MakeGrid();
 			HideTechnicalColumns(gridFac);
 			gLeft.Controls.Add(gridFac);
 			gLeft.Controls.Add(flowLeft);
@@ -45,7 +45,7 @@ namespace SimpleWebDataAdmin.Views
 			flowRight.Controls.Add(btnAddDates);
 			flowRight.Controls.Add(btnDelDate);
 
-			var gridRes = new DataGridView { Dock = DockStyle.Fill, ReadOnly = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, AllowUserToAddRows = false, BackgroundColor = Color.WhiteSmoke };
+			var gridRes = MakeGrid();
 			HideTechnicalColumns(gridRes);
 			gRight.Controls.Add(gridRes);
 			gRight.Controls.Add(flowRight);
@@ -72,8 +72,8 @@ namespace SimpleWebDataAdmin.Views
 			// LOADER
 			async Task ReloadFacilitiesAsync()
 			{
-				var facs = await AppState.Api.GetAsync<List<Facility>>("/api/admin/facilities");
-				var gals = await AppState.Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
+				var facs = await Api.GetAsync<List<Facility>>("/api/admin/facilities");
+				var gals = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
 
 				if (!gridFac.Columns.Contains("GalleryCombo"))
 				{
@@ -85,7 +85,7 @@ namespace SimpleWebDataAdmin.Views
 					(gridFac.Columns["GalleryCombo"] as DataGridViewComboBoxColumn)!.DataSource = gals;
 				}
 
-				gridFac.DataSource = new System.ComponentModel.BindingList<Facility>(facs ?? new List<Facility>());
+				gridFac.DataSource = ToBindingList(facs);
 			}
 
 			// Učitavanje rezervacija/zauzetosti odabranog objekta (ili reset ako objekt nije odabran).
@@ -98,14 +98,14 @@ namespace SimpleWebDataAdmin.Views
 					btnAddDates.Enabled = btnDelDate.Enabled = false;
 					return;
 				}
-				var reservations = await AppState.Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
+				var reservations = await Api.GetAsync<List<Reservation>>($"/api/admin/facilities/{f.Id}/reservations");
 
 				if (!gridRes.Columns.Contains("StatusCombo"))
 				{
 					var comboStatus = new DataGridViewComboBoxColumn { Name = "StatusCombo", HeaderText = "Status", DataPropertyName = "Status", DataSource = Enum.GetValues(typeof(ReservationStatus)) };
 					gridRes.Columns.Add(comboStatus);
 				}
-				gridRes.DataSource = new System.ComponentModel.BindingList<Reservation>(reservations?.OrderBy(x => x.Date).ToList() ?? new List<Reservation>());
+				gridRes.DataSource = ToBindingList(reservations?.OrderBy(x => x.Date).ToList());
 				btnAddDates.Enabled = btnDelDate.Enabled = true;
 
 				// Onemogući edit na samom datumu, korisnik uređuje samo Status ili dodaje/briše datume
@@ -129,14 +129,14 @@ namespace SimpleWebDataAdmin.Views
 			{
 				var f = gridFac.Rows[e.RowIndex].DataBoundItem as Facility;
 				if (f == null) return;
-				await AppState.Api.PutAsync($"/api/admin/facilities/{f.Id}", f);
+				await Api.PutAsync($"/api/admin/facilities/{f.Id}", f);
 			};
 
 			gridRes.CellEndEdit += async (s, e) =>
 			{
 				var r = gridRes.Rows[e.RowIndex].DataBoundItem as Reservation;
 				if (r == null) return;
-				await AppState.Api.PutAsync($"/api/admin/reservations/{r.Id}", r);
+				await Api.PutAsync($"/api/admin/reservations/{r.Id}", r);
 			};
 
 			// BRISANJE I DODAVANJE OBJEKATA
@@ -146,30 +146,17 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
 					if (f == null) return;
-					await AppState.Api.DeleteAsync($"/api/admin/facilities/{f.Id}");
+					await Api.DeleteAsync($"/api/admin/facilities/{f.Id}");
 					await ReloadFacilitiesAsync();
 				}
 			};
 
 			btnAddFac.Click += async (s, e) =>
 			{
-				using (var fModal = new Form { Width = 300, Height = 170, Text = "Novi Objekt", StartPosition = FormStartPosition.CenterParent })
-				{
-					var lbl = new Label { Text = "Šifra Objekta (Code):", Location = new Point(20, 10), AutoSize = true };
-					var txtCode = new TextBox { Location = new Point(20, 30), Width = 200, Text = "novi-objekt" };
-					var btnOk = new Button { Text = "Spremi", Location = new Point(20, 70), DialogResult = DialogResult.OK };
-					fModal.Controls.Add(lbl);
-					fModal.Controls.Add(txtCode);
-					fModal.Controls.Add(btnOk);
-					fModal.AcceptButton = btnOk;
-
-					if (fModal.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(txtCode.Text))
-					{
-						var f = new Facility { Code = txtCode.Text, Name = "Novi Objekt" };
-						await AppState.Api.PostAsync<Facility>("/api/admin/facilities", f);
-						await ReloadFacilitiesAsync();
-					}
-				}
+				var code = Dialogs.AskText("Novi Objekt", "Šifra Objekta (Code):", "novi-objekt");
+				if (code == null) return;
+				await Api.PostAsync<Facility>("/api/admin/facilities", new Facility { Code = code, Name = "Novi Objekt" });
+				await ReloadFacilitiesAsync();
 			};
 
 			btnDelDate.Click += async (s, e) =>
@@ -178,7 +165,7 @@ namespace SimpleWebDataAdmin.Views
 				{
 					var r = gridRes.SelectedRows[0].DataBoundItem as Reservation;
 					if (r == null) return;
-					await AppState.Api.DeleteAsync($"/api/admin/reservations/{r.Id}");
+					await Api.DeleteAsync($"/api/admin/reservations/{r.Id}");
 
 					// Osvježi grid rezervacija
 					var f = gridFac.SelectedRows[0].DataBoundItem as Facility;
@@ -228,7 +215,7 @@ namespace SimpleWebDataAdmin.Views
 						for (var d = start; d <= end; d = d.AddDays(1))
 						{
 							var r = new Reservation { Date = d, Status = status };
-							await AppState.Api.PostAsync<Reservation>($"/api/admin/facilities/{f.Id}/reservations", r);
+							await Api.PostAsync<Reservation>($"/api/admin/facilities/{f.Id}/reservations", r);
 						}
 
 						// Osvježi (ReloadReservationsAsync ponovno omogućuje gumbe)

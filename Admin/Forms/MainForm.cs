@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using SimpleWebDataAdmin.Services;
 using SimpleWebDataAdmin.Views;
 
 namespace SimpleWebDataAdmin.Forms
@@ -24,9 +25,11 @@ namespace SimpleWebDataAdmin.Forms
 		// Lazy lifecycle: svaki tab nosi svoj loader u TabPage.Tag (Func<Task>) i učita se
 		// prvi put kad postane vidljiv. activatedTabs pamti koji su tabovi već učitani.
 		private readonly HashSet<TabPage> activatedTabs = new();
+		private readonly ApiClient _api;
 
-		public MainForm()
+		public MainForm(ApiClient api)
 		{
+			_api = api;
 			InitializeComponent();
 			SetupUI();
 		}
@@ -123,23 +126,23 @@ namespace SimpleWebDataAdmin.Forms
 
 		private void SetupUI()
 		{
-			bool isSuperAdmin = AppState.Api.CurrentUser.IsSuperUser;
+			bool isSuperAdmin = _api.CurrentUser.IsSuperUser;
 
 			this.Text = isSuperAdmin
 				? "Super Admin - SimpleWebData"
-				: $"Dobro došao {AppState.Api.CurrentUser.Username}";
+				: $"Dobro došao {_api.CurrentUser.Username}";
 
 			// TENANT MODULI
-			AddTab("Galerije & Slike", new GalleryView());
-			AddTab("Objekti (Facilities)", new FacilitiesView());
-			AddTab("Stranice web-a", new PagesView());
-			AddTab("API Ključ", new ApiKeyView());
+			AddTab("Galerije & Slike", new GalleryView(_api));
+			AddTab("Objekti (Facilities)", new FacilitiesView(_api));
+			AddTab("Stranice web-a", new PagesView(_api));
+			AddTab("API Ključ", new ApiKeyView(_api));
 
 			// SUPER ADMIN MODULI
 			if (isSuperAdmin)
 			{
-				AddTab("[SA] Web Sites", new WebSitesView());
-				AddTab("[SA] Korisnici", new UsersView());
+				AddTab("[SA] Web Sites", new WebSitesView(_api));
+				AddTab("[SA] Korisnici", new UsersView(_api));
 			}
 
 			// Lijeno učitavanje pri prvom prelasku na tab. Kasniji prelasci ne re-fetchaju
