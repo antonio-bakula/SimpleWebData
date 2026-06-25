@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using SimpleWebData.Data;
 using SimpleWebData.Endpoints;
+using SimpleWebData.OpenApi;
 using System.Security.Claims;
 using System.Text;
 
@@ -14,6 +16,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+
+// OpenAPI dokument (ugrađeni .NET 10 generator) + JWT Bearer security u shemi.
+// UI se servira preko Scalara (moderna zamjena za klasični Swagger UI).
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddOperationTransformer<AuthorizationOperationTransformer>();
 });
 
 // Dodavanje DbContexta sa SQLite podrškom
@@ -95,12 +105,26 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// OpenAPI + Scalar UI (interaktivna API dokumentacija).
+// Drži se samo Development okruženja da se shema ne izlaže u produkciji;
+// za stalni pristup makni 'if' uvjet (ili promijeni okruženje).
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();                       // OpenAPI dokument na /openapi/v1.json
+    app.MapScalarApiReference(options =>    // UI na /scalar/v1
+    {
+        options
+            .WithTitle("SimpleWebData API")
+            .WithTheme(ScalarTheme.Purple);
+    });
+}
+
 // Registriranje novih Endpoint klasa
 app.MapAuthEndpoints();
 app.MapReadOnlyEndpoints();
 app.MapUserAdminEndpoints();
 app.MapSuperUserAdminEndpoints();
 
-app.MapGet("/", () => "SimpleWebData API is running!");
+app.MapGet("/", () => "SimpleWebData API is running! Dokumentacija: /scalar/v1");
 
 app.Run();
