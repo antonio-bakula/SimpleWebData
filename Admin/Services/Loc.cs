@@ -113,7 +113,6 @@ namespace SimpleWebDataAdmin.Services
             ["pages.colSeoTitle"] = "SEO naslov",
             ["pages.colSeoDescription"] = "SEO opis",
             ["pages.colSeoKeywords"] = "SEO ključne riječi",
-            ["pages.colGallery"] = "Galerija",
 
             // Objekti (Facilities)
             ["fac.group1"] = "1. Objekti",
@@ -168,7 +167,6 @@ namespace SimpleWebDataAdmin.Services
             ["col.lastName"] = "Prezime",
             ["col.email"] = "E-mail",
             ["col.isSuperUser"] = "Super korisnik",
-            ["col.gallery"] = "Galerija",
             ["col.webSite"] = "Web site",
         };
 
@@ -245,7 +243,6 @@ namespace SimpleWebDataAdmin.Services
             ["pages.colSeoTitle"] = "SEO Title",
             ["pages.colSeoDescription"] = "SEO Description",
             ["pages.colSeoKeywords"] = "SEO Keywords",
-            ["pages.colGallery"] = "Gallery",
 
             // Facilities
             ["fac.group1"] = "1. Facilities",
@@ -300,7 +297,6 @@ namespace SimpleWebDataAdmin.Services
             ["col.lastName"] = "Last name",
             ["col.email"] = "Email",
             ["col.isSuperUser"] = "Super user",
-            ["col.gallery"] = "Gallery",
             ["col.webSite"] = "Web site",
         };
     }

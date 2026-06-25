@@ -151,7 +151,7 @@ namespace SimpleWebData.Endpoints
                 int webSiteId = int.Parse(user.Claims.First(c => c.Type == "WebSiteId").Value);
                 var f = await db.Facilities.FirstOrDefaultAsync(x => x.Id == id && x.WebSiteId == webSiteId);
                 if (f == null) return Results.NotFound();
-                f.Code = input.Code; f.Name = input.Name; f.Description = input.Description; f.PhotoGalleryId = input.PhotoGalleryId;
+                f.Code = input.Code; f.Name = input.Name; f.Description = input.Description;
                 await db.SaveChangesAsync(); return Results.Ok(f);
             });
 
@@ -205,7 +205,7 @@ namespace SimpleWebData.Endpoints
                 int webSiteId = int.Parse(user.Claims.First(c => c.Type == "WebSiteId").Value);
                 var pg = await db.Pages.FirstOrDefaultAsync(x => x.Id == id && x.WebSiteId == webSiteId);
                 if (pg == null) return Results.NotFound();
-                pg.Code = input.Code; pg.PhotoGalleryId = input.PhotoGalleryId;
+                pg.Code = input.Code;
                 pg.Title = input.Title; pg.Description = input.Description; pg.Keywords = input.Keywords;
                 await db.SaveChangesAsync(); return Results.Ok(pg);
             });

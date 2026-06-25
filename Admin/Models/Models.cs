@@ -60,7 +60,6 @@ namespace SimpleWebDataAdmin.Models
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int WebSiteId { get; set; }
-        public int? PhotoGalleryId { get; set; }
     }
 
     public class Page
@@ -71,7 +70,6 @@ namespace SimpleWebDataAdmin.Models
         public string? Description { get; set; }
         public string? Keywords { get; set; }
         public int WebSiteId { get; set; }
-        public int? PhotoGalleryId { get; set; }
     }
 
     public enum ReservationStatus

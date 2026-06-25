@@ -60,7 +60,6 @@ namespace SimpleWebDataAdmin.Views
 			["LastName"] = "col.lastName",
 			["Email"] = "col.email",
 			["IsSuperUser"] = "col.isSuperUser",
-			["GalleryCombo"] = "col.gallery",
 			["StatusCombo"] = "col.status",
 			["SiteCombo"] = "col.webSite",
 		};

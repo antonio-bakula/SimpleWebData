@@ -60,7 +60,7 @@ namespace SimpleWebData.Data
             await context.SaveChangesAsync();
 
             // 4. Objekti za najam i rezervacije
-            var fac1 = new Facility { Code = "ap1", Name = "Apartman Sunce (A1)", WebSiteId = website.Id, PhotoGalleryId = gallery1.Id };
+            var fac1 = new Facility { Code = "ap1", Name = "Apartman Sunce (A1)", WebSiteId = website.Id };
             var fac2 = new Facility { Code = "ap2", Name = "Soba More (S1)", WebSiteId = website.Id };
             context.Facilities.AddRange(fac1, fac2);
             await context.SaveChangesAsync();
@@ -79,8 +79,7 @@ namespace SimpleWebData.Data
                 Title = "Apartmani Sunce - privatni smještaj uz more",
                 Description = "Privatni apartmani i sobe uz more. Bezbrižan odmor za cijelu obitelj.",
                 Keywords = "apartmani, smještaj, more, odmor, sunce",
-                WebSiteId = website.Id,
-                PhotoGalleryId = gallery2.Id
+                WebSiteId = website.Id
             };
             var pageContact = new Page
             {
@@ -126,7 +125,7 @@ namespace SimpleWebData.Data
             context.PhotoGalleries.Add(gallery2a);
             await context.SaveChangesAsync();
 
-            var fac2a = new Facility { Code = "parcela-1", Name = "Parcela uz more", WebSiteId = website2.Id, PhotoGalleryId = gallery2a.Id };
+            var fac2a = new Facility { Code = "parcela-1", Name = "Parcela uz more", WebSiteId = website2.Id };
             context.Facilities.Add(fac2a);
             await context.SaveChangesAsync();
 
@@ -139,8 +138,7 @@ namespace SimpleWebData.Data
                 Title = "Kamp Jadran - kamping uz more",
                 Description = "Kamp parcele uz more, mir i priroda za savršen kamping odmor.",
                 Keywords = "kamp, kamping, parcele, more, priroda",
-                WebSiteId = website2.Id,
-                PhotoGalleryId = gallery2a.Id
+                WebSiteId = website2.Id
             };
             context.Pages.Add(page2Home);
             await context.SaveChangesAsync();

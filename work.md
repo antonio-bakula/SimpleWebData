@@ -373,3 +373,28 @@ Zamišljena je kao jedinstvena "client" aplikacija koja interno prilagođava svo
 - omogućiti editiranje korisnika u gridu (inplace edit)
 - umjesto da se unosi web site Id, treba biti dropdown sa Code site-a
 - disablirati da se gridovima pojavljuje onaj dodatni prazni row, to je valjda za novi zapis ali mi imamo gumb
+
+## Izbacivanje veze PhotoGallery sa Page i Facility (2026-06-25)
+
+Stranice (`Page`) i objekti (`Facility`) više nemaju linkanu fotogaleriju. Ta veza nije potrebna jer
+se galerije po potrebi dohvaćaju zasebno preko `GET /api/read/photogalleries/{code}` (JS klijent:
+`getPhotoGallery()`). Standalone upravljanje galerijama/slikama, kao i veza slika → galerija
+(`Photo.PhotoGalleryId`), ostaju netaknuti.
+
+**SimpleWebData (API):**
+- `Models/Page.cs`, `Models/Facility.cs` — uklonjeni `PhotoGalleryId` i navigacija `PhotoGallery`.
+- `DTOs/PageDto.cs`, `DTOs/FacilityDto.cs` — uklonjeno polje `PhotoGallery`.
+- `Endpoints/ReadOnlyEndpoints.cs` — uklonjeni `Include`/`ThenInclude` i mapiranje galerije u
+  `/pages/{code}` i `/facilities/{code}/reservations`.
+- `Endpoints/UserAdminEndpoints.cs` — uklonjene dodjele `PhotoGalleryId` u PUT za stranice i objekte.
+- `Data/DataSeeder.cs` — uklonjene `PhotoGalleryId` dodjele sa seed objekata i stranica (galerije i
+  dalje postoje kao samostalan sadržaj).
+- Migracija `RemovePageFacilityPhotoGalleryLink` — droppa FK, indekse i `PhotoGalleryId` stupce iz
+  tablica `Pages` i `Facilities` (primijenjena na bazu).
+
+**SimpleWebDataAdmin (Admin):**
+- `Models/Models.cs` — uklonjen `PhotoGalleryId` iz `Page` i `Facility`.
+- `Views/PagesView.cs`, `Views/FacilitiesView.cs` — uklonjen combo stupac za odabir galerije i
+  pripadno učitavanje galerija.
+- `Services/Loc.cs`, `Views/TabView.cs` — očišćeni neiskorišteni prijevodi (`pages.colGallery`,
+  `col.gallery`) i mapiranje `GalleryCombo`.

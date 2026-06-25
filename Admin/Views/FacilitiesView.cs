@@ -58,8 +58,6 @@ namespace SimpleWebDataAdmin.Views
 			// UI POSTAVKE
 			gridFac.DataBindingComplete += (s, e) =>
 			{
-				if (gridFac.Columns["PhotoGalleryId"] != null)
-					gridFac.Columns["PhotoGalleryId"]!.Visible = false;
 				if (gridFac.Columns["Status"] != null)
 					gridFac.Columns["Status"]!.Visible = false;
 			};
@@ -75,18 +73,6 @@ namespace SimpleWebDataAdmin.Views
 			async Task ReloadFacilitiesAsync()
 			{
 				var facs = await Api.GetAsync<List<Facility>>("/api/admin/facilities");
-				var gals = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
-
-				if (!gridFac.Columns.Contains("GalleryCombo"))
-				{
-					var combo = new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = Loc.T("col.gallery"), DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", DataSource = gals };
-					gridFac.Columns.Add(combo);
-				}
-				else
-				{
-					(gridFac.Columns["GalleryCombo"] as DataGridViewComboBoxColumn)!.DataSource = gals;
-				}
-
 				gridFac.DataSource = ToBindingList(facs);
 			}
 

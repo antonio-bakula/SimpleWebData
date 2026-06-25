@@ -20,7 +20,7 @@ namespace SimpleWebDataAdmin.Views
 			BackColor = Color.White;
 
 			var split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical };
-			// Stranice (lijevo) dobivaju ~2/3 jer imaju više stupaca (Code + SEO polja + galerija);
+			// Stranice (lijevo) dobivaju ~2/3 jer imaju više stupaca (Code + SEO polja);
 			// tekstovi (desno) imaju samo Code i Content pa im je dovoljna 1/3.
 			split.Resize += (s, e) => { split.SplitterDistance = split.Width * 2 / 3; };
 
@@ -34,7 +34,7 @@ namespace SimpleWebDataAdmin.Views
 			flowLeft.Controls.Add(btnAddPage);
 			flowLeft.Controls.Add(btnDelPage);
 
-			// Eksplicitni stupci u traženom redoslijedu: prvo Code, zatim SEO polja, pa izbor galerije na kraju.
+			// Eksplicitni stupci u traženom redoslijedu: prvo Code, zatim SEO polja.
 			// (AutoGenerateColumns isključen da imamo punu kontrolu nad redoslijedom i širinama.)
 			var gridPages = MakeGrid();
 			gridPages.AutoGenerateColumns = false;
@@ -42,7 +42,6 @@ namespace SimpleWebDataAdmin.Views
 			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = Loc.T("pages.colSeoTitle"), DataPropertyName = "Title", FillWeight = 120 });
 			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Description", HeaderText = Loc.T("pages.colSeoDescription"), DataPropertyName = "Description", FillWeight = 200 });
 			gridPages.Columns.Add(new DataGridViewTextBoxColumn { Name = "Keywords", HeaderText = Loc.T("pages.colSeoKeywords"), DataPropertyName = "Keywords", FillWeight = 130 });
-			gridPages.Columns.Add(new DataGridViewComboBoxColumn { Name = "GalleryCombo", HeaderText = Loc.T("pages.colGallery"), DataPropertyName = "PhotoGalleryId", ValueMember = "Id", DisplayMember = "Code", FillWeight = 90 });
 			gLeft.Controls.Add(gridPages);
 			gLeft.Controls.Add(flowLeft);
 
@@ -67,11 +66,6 @@ namespace SimpleWebDataAdmin.Views
 			async Task ReloadPagesAsync()
 			{
 				var pages = await Api.GetAsync<List<Page>>("/api/admin/pages");
-				var gals = await Api.GetAsync<List<PhotoGallery>>("/api/admin/photogalleries");
-
-				// Combo stupac za galeriju definiran je u konstruktoru; ovdje samo osvježimo njegov izvor podataka.
-				((DataGridViewComboBoxColumn)gridPages.Columns["GalleryCombo"]!).DataSource = gals;
-
 				gridPages.DataSource = ToBindingList(pages);
 			}
 

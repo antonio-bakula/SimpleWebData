@@ -70,8 +70,6 @@ namespace SimpleWebData.Endpoints
 
                 var page = await db.Pages
                     .Include(p => p.Texts)
-                    .Include(p => p.PhotoGallery)
-                        .ThenInclude(pg => pg!.Photos)
                     .FirstOrDefaultAsync(p => p.WebSiteId == webSiteId && p.Code == code);
 
                 if (page == null) return Results.NotFound();
@@ -82,19 +80,7 @@ namespace SimpleWebData.Endpoints
                     Title = page.Title,
                     Description = page.Description,
                     Keywords = page.Keywords,
-                    Texts = page.Texts.Select(t => new PageTextDto { Code = t.Code, Content = t.Content }).ToList(),
-                    PhotoGallery = page.PhotoGallery != null ? new PhotoGalleryDto
-                    {
-                        Code = page.PhotoGallery.Code,
-                        Name = page.PhotoGallery.Name,
-                        Description = page.PhotoGallery.Description,
-                        Photos = page.PhotoGallery.Photos.Select(ph => new PhotoDto
-                        {
-                            AltText = ph.AltText,
-                            FileName = ph.FileName,
-                            ImageUrl = $"/api/read/images/{page.PhotoGallery.Code}/{ph.FileName}"
-                        }).ToList()
-                    } : null
+                    Texts = page.Texts.Select(t => new PageTextDto { Code = t.Code, Content = t.Content }).ToList()
                 };
 
                 return Results.Ok(dto);
@@ -134,8 +120,6 @@ namespace SimpleWebData.Endpoints
 
                 var facility = await db.Facilities
                     .Include(f => f.Reservations)
-                    .Include(f => f.PhotoGallery)
-                        .ThenInclude(pg => pg!.Photos)
                     .FirstOrDefaultAsync(f => f.WebSiteId == webSiteId && f.Code == code);
 
                 if (facility == null) return Results.NotFound();
@@ -149,18 +133,6 @@ namespace SimpleWebData.Endpoints
                     Code = facility.Code,
                     Name = facility.Name,
                     Description = facility.Description,
-                    PhotoGallery = facility.PhotoGallery != null ? new PhotoGalleryDto
-                    {
-                        Code = facility.PhotoGallery.Code,
-                        Name = facility.PhotoGallery.Name,
-                        Description = facility.PhotoGallery.Description,
-                        Photos = facility.PhotoGallery.Photos.Select(ph => new PhotoDto
-                        {
-                            AltText = ph.AltText,
-                            FileName = ph.FileName,
-                            ImageUrl = $"/api/read/images/{facility.PhotoGallery.Code}/{ph.FileName}"
-                        }).ToList()
-                    } : null,
                     Reservations = resQuery.Select(r => new ReservationDto
                     {
                         Date = r.Date,
