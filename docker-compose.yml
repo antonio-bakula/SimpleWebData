@@ -1,0 +1,20 @@
+services:
+  swd_api:
+    build:
+      context: ./API
+    image: simplewebdata-api
+    container_name: swd_api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/SimpleWebData.db
+      - JwtSettings__SecretKey=${JWT_SECRET}
+    volumes:
+      - /srv/das/web/apps/simplewebdata/data:/app/data
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

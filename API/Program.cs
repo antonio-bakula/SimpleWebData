@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -79,7 +80,16 @@ using (var scope = app.Services.CreateScope())
     await DataSeeder.InitializeAsync(services);
 }
 
-app.UseHttpsRedirection();
+// Iza reverse proxyja (nginx) koji terminira TLS: čitaj X-Forwarded-Proto/For
+// da app vidi ispravnu shemu (https) i klijentsku IP. KnownProxies/Networks se
+// čiste jer je container dostupan samo nginxu na internoj 'web' mreži (povjerljiv proxy).
+var fwdOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+fwdOptions.KnownNetworks.Clear();
+fwdOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(fwdOptions);
 
 // Primjena CORS politike i Auth middleware-a
 app.UseCors("AllowAll");
