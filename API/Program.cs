@@ -116,18 +116,14 @@ app.Use(async (context, next) =>
 });
 
 // OpenAPI + Scalar UI (interaktivna API dokumentacija).
-// Drži se samo Development okruženja da se shema ne izlaže u produkciji;
-// za stalni pristup makni 'if' uvjet (ili promijeni okruženje).
-if (app.Environment.IsDevelopment())
+// Namjerno dostupno i u produkciji (dokumentacija na /scalar/v1).
+app.MapOpenApi();                       // OpenAPI dokument na /openapi/v1.json
+app.MapScalarApiReference(options =>    // UI na /scalar/v1
 {
-    app.MapOpenApi();                       // OpenAPI dokument na /openapi/v1.json
-    app.MapScalarApiReference(options =>    // UI na /scalar/v1
-    {
-        options
-            .WithTitle("SimpleWebData API")
-            .WithTheme(ScalarTheme.Purple);
-    });
-}
+    options
+        .WithTitle("SimpleWebData API")
+        .WithTheme(ScalarTheme.Purple);
+});
 
 // Registriranje novih Endpoint klasa
 app.MapAuthEndpoints();

@@ -21,6 +21,7 @@ namespace SimpleWebDataAdmin.Forms
 		public FormWindowState WindowState { get; set; }
 		public double Zoom { get; set; } = 1.0;
 		public string Language { get; set; } = "hr";
+		public string ApiUrl { get; set; } = "";
 	}
 
 	public class MainForm : Form
@@ -129,7 +130,9 @@ namespace SimpleWebDataAdmin.Forms
 			base.OnFormClosing(e);
 			try
 			{
-				var s = new WindowSettings { WindowState = this.WindowState, Zoom = UiZoom.Factor, Language = Loc.Language };
+				// ApiUrl prepisujemo natrag (na temelju aktivne konekcije) jer inače bismo ga,
+				// pošto ovaj objekt ide preko cijelog settings.json, izbrisali (zapisao ga je login).
+				var s = new WindowSettings { WindowState = this.WindowState, Zoom = UiZoom.Factor, Language = Loc.Language, ApiUrl = _api.BaseUrl.TrimEnd('/') };
 				if (this.WindowState == FormWindowState.Normal)
 				{
 					s.X = this.Location.X;

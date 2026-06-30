@@ -149,6 +149,8 @@ namespace SimpleWebDataAdmin.Services
             ["users.delConfirm"] = "Obrisati odabranog korisnika?",
 
             // API Ključ
+            ["apikey.targetSite"] = "Ključ se generira za web site: {0}",
+            ["apikey.targetSiteHint"] = "Za drugi web site, promijenite ga gore u izborniku \"Aktivni web site\" pa se vratite na ovaj tab.",
             ["apikey.domainsLabel"] = "Upišite domene (odvojene zarezom):",
             ["apikey.generateBtn"] = "Generiraj Trajni Read-Only API Token",
             ["apikey.connectError"] = "Greška kod spajanja na API!",
@@ -279,6 +281,8 @@ namespace SimpleWebDataAdmin.Services
             ["users.delConfirm"] = "Delete the selected user?",
 
             // API Key
+            ["apikey.targetSite"] = "The key will be generated for web site: {0}",
+            ["apikey.targetSiteHint"] = "To target a different web site, change it in the \"Active web site\" selector above, then return to this tab.",
             ["apikey.domainsLabel"] = "Enter domains (comma-separated):",
             ["apikey.generateBtn"] = "Generate Permanent Read-Only API Token",
             ["apikey.connectError"] = "Error connecting to API!",

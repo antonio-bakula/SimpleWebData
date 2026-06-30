@@ -1,5 +1,8 @@
 using System;
 using System.Drawing;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows.Forms;
 using SimpleWebDataAdmin.Services;
 
@@ -39,16 +42,16 @@ namespace SimpleWebDataAdmin.Forms
 			// donji rub se pomakne da je u cijelosti vidljiva (umjesto da bude odrezana).
 			this.AutoSize = true;
 			this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-			this.MinimumSize = new Size(Z(480), Z(410));
+			this.MinimumSize = new Size(Z(720), Z(410));
 			this.Padding = new Padding(0, 0, 0, Z(16));
 
 			var pnlTop = new Panel { Dock = DockStyle.Top, Height = Z(60), BackColor = Color.SteelBlue };
-			lblTitle = new Label { ForeColor = Color.White, Font = UiZoom.ScaledFont(12, FontStyle.Bold), Location = new Point(Z(20), Z(15)), AutoSize = true };
+			lblTitle = new Label { ForeColor = Color.White, Font = UiZoom.ScaledFont(12, FontStyle.Bold), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter };
 			pnlTop.Controls.Add(lblTitle);
 
 			// Izbor jezika (oznaka je namjerno dvojezična da je uvijek jasna).
 			var lblLang = new Label { Text = "Language:", Location = new Point(Z(30), Z(82)), AutoSize = true };
-			cmbLang = new ComboBox { Location = new Point(Z(185), Z(78)), Width = Z(235), DropDownStyle = ComboBoxStyle.DropDownList };
+			cmbLang = new ComboBox { Location = new Point(Z(185), Z(78)), Width = Z(475), DropDownStyle = ComboBoxStyle.DropDownList };
 			cmbLang.Items.AddRange(new object[] { "Hrvatski", "English" });
 			cmbLang.SelectedIndex = Loc.Language == "en" ? 1 : 0;
 			cmbLang.SelectedIndexChanged += (s, e) =>
@@ -58,26 +61,26 @@ namespace SimpleWebDataAdmin.Forms
 			};
 
 			lblApi = new Label { Location = new Point(Z(30), Z(122)), AutoSize = true };
-			txtApiUrl = new TextBox { Location = new Point(Z(185), Z(122)), Width = Z(235), Text = "http://localhost:5072" };
+			txtApiUrl = new TextBox { Location = new Point(Z(185), Z(122)), Width = Z(475), Text = LoadSavedApiUrl() };
 
 			lblUser = new Label { Location = new Point(Z(30), Z(162)), AutoSize = true };
-			txtUsername = new TextBox { Location = new Point(Z(185), Z(162)), Width = Z(235) };
+			txtUsername = new TextBox { Location = new Point(Z(185), Z(162)), Width = Z(475) };
 
 			lblPass = new Label { Location = new Point(Z(30), Z(202)), AutoSize = true };
-			txtPassword = new TextBox { Location = new Point(Z(185), Z(202)), Width = Z(235), UseSystemPasswordChar = true };
+			txtPassword = new TextBox { Location = new Point(Z(185), Z(202)), Width = Z(475), UseSystemPasswordChar = true };
 
 #if DEBUG
 			txtUsername.Text = "admin";
 			txtPassword.Text = "123";
 #endif
 
-			btnLogin = new Button { Location = new Point(Z(185), Z(252)), Width = Z(235), Height = Z(40), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+			btnLogin = new Button { Location = new Point(Z(185), Z(252)), Width = Z(475), Height = Z(40), BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
 			btnLogin.FlatAppearance.BorderSize = 0;
 			btnLogin.Click += BtnLogin_Click;
 
 			// AutoSize + fiksna širina (Min == Max) => label se prelama u više redaka i raste u visinu;
 			// tekst ostaje centriran, a forma (AutoSize) naraste s njim pa poruka nikad ne ispadne van.
-			lblError = new Label { ForeColor = Color.Crimson, Location = new Point(Z(30), Z(307)), AutoSize = true, MinimumSize = new Size(Z(340), 0), MaximumSize = new Size(Z(340), 0), TextAlign = ContentAlignment.MiddleCenter };
+			lblError = new Label { ForeColor = Color.Crimson, Location = new Point(Z(30), Z(307)), AutoSize = true, MinimumSize = new Size(Z(580), 0), MaximumSize = new Size(Z(580), 0), TextAlign = ContentAlignment.MiddleCenter };
 
 			this.Controls.Add(pnlTop);
 			this.Controls.Add(lblLang);
@@ -120,6 +123,8 @@ namespace SimpleWebDataAdmin.Forms
 
 				if (success)
 				{
+					// Tek nakon uspješne prijave - ako URL ne valja, ne želimo da idući put bude predomontiran.
+					SaveApiUrl(txtApiUrl.Text.Trim());
 					this.DialogResult = DialogResult.OK;
 					this.Close();
 				}
@@ -134,6 +139,36 @@ namespace SimpleWebDataAdmin.Forms
 				lblError.Text = Loc.T("login.errConnect") + ex.Message;
 				btnLogin.Enabled = true;
 			}
+		}
+
+		// Učita zadnji zapamćeni API URL iz settings.json (isto polje koje pamti i MainForm).
+		private static string LoadSavedApiUrl()
+		{
+			try
+			{
+				if (File.Exists("settings.json"))
+				{
+					using var doc = JsonDocument.Parse(File.ReadAllText("settings.json"));
+					if (doc.RootElement.TryGetProperty("ApiUrl", out var u) && u.GetString() is string url && !string.IsNullOrWhiteSpace(url))
+						return url;
+				}
+			}
+			catch { /* Utišano - ostaje default */ }
+			return "http://localhost:5072";
+		}
+
+		// Spremi API URL u settings.json - poziva se SAMO nakon uspješne prijave.
+		// Čitamo/pišemo kao JsonObject (ne cijeli WindowSettings) da ne pregazimo
+		// zoom/jezik/poziciju prozora koje sprema MainForm.
+		private static void SaveApiUrl(string url)
+		{
+			try
+			{
+				var root = (File.Exists("settings.json") ? JsonNode.Parse(File.ReadAllText("settings.json")) as JsonObject : null) ?? new JsonObject();
+				root["ApiUrl"] = url;
+				File.WriteAllText("settings.json", root.ToJsonString());
+			}
+			catch { /* Utišano */ }
 		}
 	}
 }
